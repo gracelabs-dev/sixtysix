@@ -135,6 +135,15 @@ if (import.meta.env.DEV && window.location.pathname === '/motion-lab') {
       </StrictMode>,
     ),
   )
+} else if (import.meta.env.DEV && window.location.pathname === '/jericho-lab') {
+  // Dev-only: the March on Jericho with a simulated room of 1–200 players (ceremony/jericho/).
+  void import('./ceremony/jericho/JerichoLab').then(({ JerichoLab }) =>
+    root.render(
+      <StrictMode>
+        <JerichoLab />
+      </StrictMode>,
+    ),
+  )
 } else if (import.meta.env.DEV && window.location.pathname === '/looks-lab') {
   // Dev-only contact sheet: every character wearing every head / neck item (looks/bustArt.ts).
   void import('./looks/LooksLab').then(({ LooksLab }) => root.render(<LooksLab />))

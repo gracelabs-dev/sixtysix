@@ -46,7 +46,7 @@ export interface RoomConfig {
   deckTitle?: string
 }
 
-export const MAX_ARENA_PLAYERS = 100
+export const MAX_ARENA_PLAYERS = 200
 
 // Playable characters (CHARACTERS) and the look string carried in every `avatar` field: shared/src/looks.ts.
 

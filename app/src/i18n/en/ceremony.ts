@@ -10,6 +10,15 @@ export default {
     lead: '👑 Takes the lead!',
     overtake: '⚡ Overtake!',
   },
+  jericho: {
+    title: 'The March on Jericho',
+    after: 'after question {played} of {total}',
+    shout: 'Shout!',
+    verse: '“The wall fell down flat.” — Joshua 6:20',
+    more_one: '+{count} more marching',
+    more_other: '+{count} more marching',
+    alt: 'Jericho and the road round its walls',
+  },
   crowning: {
     title: 'The Crowning',
     champion: 'Champion',

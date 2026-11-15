@@ -35,7 +35,7 @@ const GEOMETRY = {
 } as const
 type Geometry = (typeof GEOMETRY)[keyof typeof GEOMETRY]
 
-/** Chariots drawn by default (Bible Blitz has four; the arena passes its room size, up to ROAD_MAX_PLAYERS). */
+/** Chariots drawn by default (Bible Blitz races four). */
 const SHOWN = 6
 /** Chariots gallop, then the order settles and badges/banners appear. */
 const SETTLE_MS = 3000
@@ -99,12 +99,12 @@ function layout(entries: RaceEntry[], key: 'before' | 'after', g: Geometry, tota
 }
 
 /**
- * "Road to the Throne": standings between questions. Chariots race up a single
+ * "Road to the Throne": Bible Blitz's standings between questions (the arena marches
+ * on Jericho instead, ceremony/jericho/). Chariots race up a single
  * red-carpet track toward the throne — height on screen is progress. Each
  * player owns a colour (chariot + portrait ring + tag); the leader trails holy
  * fire. Phone shows the top `shown` (+ a pinned card for you); boards add a
- * full standings column. Big arena rooms get the ranked list instead
- * (screens/arena/game/Leaderboard.tsx, ROAD_MAX_PLAYERS).
+ * full standings column.
  */
 interface Props {
   entries: RaceEntry[]
@@ -131,7 +131,7 @@ export function RoadToThrone({ entries, played, total, wide, goal, compact, show
     return () => clearTimeout(id)
   }, [])
 
-  // Up to six chariots at full size; a bigger pack (arena rooms up to ROAD_MAX_PLAYERS) a little smaller.
+  // Up to six chariots at full size; a bigger pack a little smaller.
   const sizeK = Math.sqrt(6 / Math.max(6, Math.min(shownCount, entries.length)))
   const shown = entries.filter((r) => r.rankAfter <= shownCount).sort((a, b) => after.get(a.id)!.y - after.get(b.id)!.y)
   const you = entries.find((r) => r.you)

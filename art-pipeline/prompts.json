@@ -1764,6 +1764,61 @@
         "out/raw/bg-road-landscape-2.png"
       ],
       "prompt": "Wide game-menu banner illustration, landscape, the subject centred with breathing room at the left and right edges (it will be cropped to a wide strip), no text, no close-up faces. The Israelites crossing the parted Red Sea on dry seabed, towering walls of glittering blue water on both sides, a long line of small figures with staffs and bundles seen from behind, Pharaoh's chariots tiny and far behind in the dust, a golden pillar of light in the sky ahead. Same painterly style and warm palette as the attached reference."
+    },
+    {
+      "id": "chariot-gallop",
+      "aspect": "21:9",
+      "transparent": true,
+      "refs": [
+        "refs/chariot-side.png",
+        "refs/style-d.png"
+      ],
+      "prompt": "Game animation sprite sheet: exactly FOUR frames side by side in one row, of the SAME chariot team as the first attached image (same gilded crimson two-wheeled chariot, same two horses, same colours and size), side view, racing to the RIGHT. The four frames are one full gallop cycle of both horses: 1) legs gathered under the body, 2) front legs reaching forward and back legs pushing off, 3) fully stretched in the air, 4) front hooves landing. The chariot and wheel stay at the same position and size in every frame; only the horses legs, heads, manes and tails move. Each frame centred in its own quarter with clear empty space between frames, all on one baseline. EMPTY chariot (no driver). No dust, no shadow, no ground, no scenery."
+    },
+    {
+      "id": "bg-race-track",
+      "aspect": "21:9",
+      "transparent": false,
+      "refs": [
+        "refs/style-d.png"
+      ],
+      "prompt": "Wide side-view panorama background for a chariot race game, no characters on the track. Golden late-afternoon light. The LOWER HALF of the image is a broad, flat, dusty packed-earth racetrack seen from the side and slightly from above, so the track recedes in depth from the bottom edge to its far edge (wide enough for six lanes), with faint wheel ruts running left to right. Along the far edge of the track: a low stone barrier with cheering spectators and colourful pennants. Behind them: olive trees, rolling hills and, in the distance, the walls and towers of ancient Jerusalem with the Temple gleaming in the sun, warm sky with soft clouds. Horizontal composition, everything runs left to right, the left and right edges continue naturally so the image can scroll sideways. No text, no UI."
+    },
+    {
+      "id": "bg-jericho",
+      "aspect": "4:3",
+      "transparent": false,
+      "refs": [
+        "refs/style-d.png"
+      ],
+      "prompt": "Steep bird's-eye view (about 65 degrees down) of the ancient walled city of JERICHO standing alone in the exact centre of the picture. A round city of flat-roofed mud-brick houses packed inside one thick, tall sandstone wall with square towers and battlements; one large wooden double gate in the wall facing the viewer at the bottom centre. The city fills no more than 45% of the picture width. All around it lies a wide, empty, flat plain of warm packed sand, completely clear of objects for a broad band around the wall. Only at the picture's outer edges: palm groves, a few rocks, the Jordan valley haze. In the lower left corner a small camp of striped Israelite tents with a campfire. Warm late-afternoon light, long soft shadows falling to the lower right. No people, no text, no paths or roads drawn on the sand."
+    },
+    {
+      "id": "item-shofar",
+      "aspect": "1:1",
+      "transparent": true,
+      "refs": [
+        "refs/style-d.png"
+      ],
+      "prompt": "A single curved ram's-horn trumpet (shofar), polished gold-brown with a gilded mouthpiece band, three-quarter view, thick dark outline, centred, plain magenta background, no hands, no text."
+    },
+    {
+      "id": "fx-dust",
+      "aspect": "1:1",
+      "transparent": true,
+      "refs": [
+        "refs/style-d.png"
+      ],
+      "prompt": "One soft billowing puff of pale sand-coloured dust cloud, painted game-effect sprite, rounded lumpy silhouette, lighter on top, centred, plain magenta background."
+    },
+    {
+      "id": "bg-jericho-fallen",
+      "aspect": "4:3",
+      "transparent": false,
+      "refs": [
+        "refs/jericho-intact.png"
+      ],
+      "prompt": "The same picture as the attached image, identical camera, city, houses, plain, camp and lighting. Change only the city wall: it has collapsed outward all the way round into heaps of broken sandstone blocks and rubble, towers toppled, the gate fallen flat, thin dust hanging over the ruins. The houses inside stay standing. Nothing else moves."
     }
   ]
 }

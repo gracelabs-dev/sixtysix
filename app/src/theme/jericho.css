@@ -1,0 +1,177 @@
+/* ══ The March on Jericho (ceremony/jericho/Jericho.tsx) ═══════════════════ */
+.jr{ position: absolute; inset: 0; z-index: 12; display: flex; overflow: hidden; background: #1d0b06; color: #fff; }
+.jr.wide{ flex-direction: row; }
+.jr.tall{ flex-direction: column; }
+
+.jr-box{ position: relative; flex: 1; min-width: 0; min-height: 0; display: grid; place-items: center; }
+.jr.wide.has-rail .jr-box{ flex: 0 0 75%; }
+.jr.tall .jr-box{ flex: none; }
+.jr-stage{ position: relative; overflow: hidden; }
+.jr-world{ position: absolute; top: 0; }
+.jr-bg{ position: absolute; inset: 0; background: url('/art/bg-jericho.webp') 0 0 / 100% 100% no-repeat; }
+.jr-bg.fallen{ background-image: url('/art/bg-jericho-fallen.webp'); opacity: 0; transition: opacity 0.4s ease 0.25s; }
+.jr-bg.fallen.on{ opacity: 1; }
+
+/* The road: drawn in code over the painting (geometry.ts), so the medallions stand on it exactly. */
+.jr-svg{ position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.jr-svg path{ fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.jr-road-edge{ stroke: #7a4a1f; stroke-opacity: 0.4; stroke-width: 7.4; }
+.jr-road-bed{ stroke: #e8c58a; stroke-opacity: 0.72; stroke-width: 6.4; }
+.jr-road-gold{ stroke: url(#jr-gold); stroke-width: 3.2; }
+.jr-road-dash{ stroke: #7a4a1f; stroke-opacity: 0.35; stroke-width: 0.35; stroke-dasharray: 1.2 1.4; }
+.jr-crack-dark{ stroke: #3a1c08; stroke-width: 0.42; }
+.jr-crack-light{ stroke: #f6ddb0; stroke-width: 0.14; }
+.jr-cracks .new path{ stroke-dasharray: 1; stroke-dashoffset: 1; animation: jr-draw 0.5s ease-out forwards; }
+.jr-cracks{ transition: opacity 0.3s; }
+.jr-cracks.gone{ opacity: 0; }
+@keyframes jr-draw{ to{ stroke-dashoffset: 0; } }
+
+.jr-gate-glow{
+  position: absolute; left: 50%; top: 80%; width: 15%; height: 13%; translate: -50% -50%;
+  background: radial-gradient(closest-side, #ffe39a99, transparent); pointer-events: none;
+  animation: jr-breathe 2.4s ease-in-out infinite;
+}
+.jr.final .jr-gate-glow{ display: none; }
+@keyframes jr-breathe{ 50%{ opacity: 0.45; scale: 0.9; } }
+
+.jr-crowd{ position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* ── medallions ───────────────────────────────────────────────────────── */
+.jr-tok{
+  position: absolute; left: 0; top: 0; width: var(--d); height: var(--d);
+  margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2); will-change: transform; pointer-events: none;
+}
+.jr-in{ position: absolute; inset: 0; scale: var(--s); transition: scale 0.4s; }
+.jr-in.hop{ animation: jr-hop 0.38s ease-in-out 2; }
+.jr-in.champion{ animation: jr-grow 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) forwards; }
+@keyframes jr-hop{ 50%{ translate: 0 -18%; } }
+@keyframes jr-grow{ to{ scale: calc(var(--s) * 1.3); } }
+.jr-shadow{ position: absolute; left: 12%; right: 12%; bottom: -15%; height: 22%; border-radius: 50%; background: radial-gradient(closest-side, #000a, transparent); }
+.jr-spike{ position: absolute; left: 50%; bottom: -11%; width: 16%; height: 16%; translate: -50% 0; background: var(--c); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.jr-med.painted-portrait{
+  position: absolute; inset: 0;
+  box-shadow: 0 0 0 calc(var(--d) * 0.05) var(--c), 0 0 0 calc(var(--d) * 0.085) #f6d27a, 0 0 0 calc(var(--d) * 0.1) #4a2a0c, 0 calc(var(--d) * 0.06) calc(var(--d) * 0.12) #000a;
+}
+.jr-chip{
+  position: absolute; right: -10%; bottom: -6%; min-width: 36%; height: 36%; padding: 0 0.15em; box-sizing: border-box;
+  border-radius: 999px; background: linear-gradient(#fff0c4, #f2c35b); color: #1d0f06; box-shadow: 0 0 0 2px #4a2a0c;
+  font: 900 calc(var(--d) * 0.22) / 1 'Cinzel', serif; display: grid; place-items: center; z-index: 2;
+}
+.jr-chip.up{ background: linear-gradient(#e7ffd8, #7fd46a); }
+.jr-gain{
+  position: absolute; left: 50%; top: -30%; translate: -50% 0; z-index: 3; white-space: nowrap; opacity: 0;
+  font: 900 calc(var(--d) * 0.24) / 1 'Cinzel', serif; color: #fff6d6; text-shadow: 0 2px 0 #4a2a0c, 0 0 8px #000;
+  animation: jr-gain 2.8s ease-out both;
+}
+@keyframes jr-gain{
+  0%{ opacity: 0; transform: translateY(30%) scale(0.5); }
+  25%{ opacity: 1; transform: translateY(0) scale(1.1); }
+  80%{ opacity: 1; transform: translateY(-10%) scale(1); }
+  100%{ opacity: 0; transform: translateY(-40%) scale(1); }
+}
+.jr-ribbon{
+  position: absolute; left: 50%; top: -14%; translate: calc(-50% + var(--rx, 0px)) -100%; z-index: 3;
+  padding: 0.18em 0.75em; border-radius: 4px; white-space: nowrap; max-width: 260%; overflow: hidden; text-overflow: ellipsis;
+  background: linear-gradient(#a3221b, #6e120e); border: 2px solid #f2c35b; box-shadow: 0 4px 8px #0008;
+  font: 700 max(11px, calc(var(--d) * 0.19)) / 1.15 'Cinzel', serif; color: #fff;
+}
+/* Near the top edge the ribbon hangs below the medallion instead. */
+.jr-tok.top .jr-ribbon{ top: auto; bottom: -22%; translate: calc(-50% + var(--rx, 0px)) 100%; }
+.jr-tok.you .jr-ribbon{ background: linear-gradient(#f7d77a, #c8902c); color: #3a1c08; border-color: #fff3c4; }
+.jr-tok.you .jr-in::after{
+  content: ''; position: absolute; inset: -14%; border-radius: 50%; border: max(2px, calc(var(--d) * 0.04)) solid #ffe08a;
+  box-shadow: 0 0 12px #ffd34d; animation: jr-breathe 1.6s ease-in-out infinite; pointer-events: none;
+}
+.jr-rays{
+  position: absolute; inset: -45%; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(#ffe7a040 0 8deg, transparent 8deg 22deg);
+  mask: radial-gradient(closest-side, #000 40%, transparent); animation: jr-spin 14s linear infinite;
+}
+@keyframes jr-spin{ to{ rotate: 360deg; } }
+.jr-badge{ position: absolute; left: -30%; top: -24%; width: 54%; z-index: 2; filter: drop-shadow(0 2px 3px #000a); }
+
+.jr-fx{ position: absolute; inset: 0; pointer-events: none; z-index: 5000; container-type: inline-size; }
+.jr-dust{ position: absolute; pointer-events: none; }
+
+/* ── finale overlays ──────────────────────────────────────────────────── */
+.jr-flash{ position: absolute; inset: 0; z-index: 6000; background: #fff7dc; opacity: 0; pointer-events: none; }
+.jr-flash.on{ animation: jr-flash 0.3s ease-out; }
+@keyframes jr-flash{ 30%{ opacity: 0.9; } 100%{ opacity: 0; } }
+.jr-shaft{
+  position: absolute; left: 28%; top: -10%; width: 44%; height: 95%; z-index: 5500; pointer-events: none; opacity: 0;
+  background: linear-gradient(#fff6d0cc, #fff6d000 85%); clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+  mix-blend-mode: screen; transition: opacity 0.9s;
+}
+.jr-shaft.on{ opacity: 0.85; }
+.jr-shout{
+  position: absolute; left: 50%; top: 40%; translate: -50% -50%; z-index: 6001; pointer-events: none; opacity: 0;
+  font: 900 clamp(32px, 13vmin, 150px) / 1 'Cinzel', serif; letter-spacing: 0.05em; color: #fff1c2; white-space: nowrap;
+  text-shadow: 0 0.06em 0 #5a2c06, 0 0 0.4em #ffcf5a;
+}
+.jr-shout.on{ animation: jr-shout 1.3s ease-out forwards; }
+@keyframes jr-shout{
+  0%{ opacity: 0; scale: 0.4; }
+  30%{ opacity: 1; scale: 1.1; }
+  75%{ opacity: 1; scale: 1; }
+  100%{ opacity: 0; scale: 1.2; }
+}
+.jr-verse{
+  position: absolute; left: 50%; top: 3%; translate: -50% 0; z-index: 6001; width: max-content; max-width: 90%;
+  padding: 0.45em 1.1em; border-radius: 8px; background: #1d0b06d9; border: 1px solid #f2c35b88; text-align: center;
+  font: 700 clamp(12px, 2.4vmin, 26px) / 1.3 'Cinzel', serif; color: #f6e2b0; opacity: 0; transition: opacity 0.8s 0.4s;
+}
+.jr-verse.on{ opacity: 1; }
+
+/* ── title, horns, standings rail ─────────────────────────────────────── */
+.jr-head{ flex: none; text-align: center; padding: calc(env(safe-area-inset-top) + 52px) 12px 6px; }
+.jr.wide .jr-head{ padding: 0; }
+.jr-title{ font: 900 clamp(17px, 2.1vw, 34px) / 1.05 'Cinzel', serif; color: #f2c35b; text-shadow: 0 2px 0 #000; }
+.jr.tall .jr-title{ font-size: clamp(17px, 5vw, 26px); }
+.jr-title small{ display: block; margin-top: 0.3em; font: 700 clamp(10px, 0.95vw, 16px) / 1.3 'Cinzel', serif; color: #f3dfb0; letter-spacing: 0.08em; text-transform: uppercase; }
+.jr.tall .jr-title small{ font-size: clamp(10px, 3vw, 13px); }
+.jr-horns{ display: flex; justify-content: center; gap: 2%; margin-top: 1.2vh; }
+.jr-horns img{ width: 11%; max-width: 54px; filter: grayscale(1) brightness(0.45); transition: filter 0.4s; }
+.jr.tall .jr-horns img{ width: 9%; max-width: 40px; }
+.jr-horns img.lit{ filter: none; }
+.jr-horns img.pop{ animation: jr-horn 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+@keyframes jr-horn{ 0%{ scale: 0.3; filter: grayscale(1) brightness(0.45); } 60%{ filter: brightness(1.6) drop-shadow(0 0 8px #ffd76a); } 100%{ scale: 1; filter: none; } }
+
+.jr-rail{
+  position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 1.6vh;
+  padding: calc(clamp(10px, 2vh, 20px) + clamp(48px, 8vh, 74px)) 1.3vw 2vh;
+  background: linear-gradient(#4a0f0c, #2b0806); border-left: 4px solid #b9822a; box-shadow: inset 6px 0 0 #0005;
+}
+.jr.tall .jr-rail{ flex: 1; border-left: 0; border-top: 4px solid #b9822a; padding: 1.4vh 3vw calc(env(safe-area-inset-bottom) + 1.4vh); }
+.jr-rows{ position: relative; flex: 1; min-height: 0; }
+.jr-row{
+  position: absolute; left: 0; right: 0; height: calc(100% / var(--rows) - 0.7vh); box-sizing: border-box;
+  display: flex; align-items: center; gap: 0.6em; padding: 0 0.6em; border-radius: 8px;
+  background: #ffffff0d; border: 1px solid #f2c35b33; transition: top 0.7s cubic-bezier(0.3, 1.3, 0.5, 1);
+  font-size: clamp(12px, min(1.25vw, 2.6vh), 24px);
+}
+.jr-row.first{ background: linear-gradient(90deg, #f2c35b3a, #ffffff0d); border-color: #f2c35b88; }
+.jr-rk{ width: 1.6em; flex: none; text-align: right; font: 900 1em 'Cinzel', serif; color: #f2c35b; }
+.jr-pf.painted-portrait{ flex: none; width: 2.4em; height: 2.4em; box-shadow: 0 0 0 3px var(--c), 0 0 0 5px #000; }
+.jr-nm{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jr-mv{ flex: none; font-size: 0.75em; }
+.jr-mv.up{ color: #7dff8a; }
+.jr-mv.down{ color: #ff8a7d; }
+.jr-sc{ flex: none; font: 700 1em 'Cinzel', serif; font-variant-numeric: tabular-nums; }
+.jr-more{ flex: none; text-align: center; font: 700 clamp(11px, 1vw, 18px) 'Cinzel', serif; color: #f3dfb0aa; }
+
+@media (prefers-reduced-motion: reduce){
+  .jr-gate-glow, .jr-rays, .jr-tok.you .jr-in::after{ animation: none; }
+  .jr-cracks .new path{ animation: none; stroke-dashoffset: 0; }
+  .jr-gain{ display: none; }
+  .jr-horns img.pop{ animation: none; }
+  .jr-row{ transition: none; }
+}
+
+/* Phones: the leaders by name under the map (your own standing panel follows below). */
+.jr-mini{ flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 5px; padding: 8px 12px 6px; }
+.jr-mrow{
+  flex: none; display: flex; align-items: center; gap: 0.55em; height: 38px; padding: 0 0.7em; border-radius: 9px;
+  background: #ffffff0f; border: 1px solid #f2c35b2e; font-size: 15px;
+}
+.jr-mrow .jr-pf.painted-portrait{ width: 28px; height: 28px; box-shadow: 0 0 0 2px var(--c), 0 0 0 3px #000; }
+.jr-mrow.you{ background: linear-gradient(90deg, #ffe08a55, #ffe08a14); border-color: #ffe08a; }
