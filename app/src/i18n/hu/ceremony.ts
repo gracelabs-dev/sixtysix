@@ -8,6 +8,15 @@ export default {
     lead: '👑 Átveszi a vezetést!',
     overtake: '⚡ Előzés!',
   },
+  jericho: {
+    title: 'Jerikó körül',
+    after: '{played}. kérdés / {total}',
+    shout: 'Kiáltsatok!',
+    verse: '„És leomlék a kőfal magától.” – Józs 6,20',
+    more_one: '+{count} társ menetel',
+    more_other: '+{count} társ menetel',
+    alt: 'Jerikó és a falai körüli út',
+  },
   crowning: {
     title: 'A koronázás',
     champion: 'Bajnok',

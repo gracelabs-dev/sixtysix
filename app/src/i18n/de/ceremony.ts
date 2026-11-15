@@ -8,6 +8,15 @@ export default {
     lead: '👑 Übernimmt die Führung!',
     overtake: '⚡ Überholt!',
   },
+  jericho: {
+    title: 'Der Zug um Jericho',
+    after: 'nach Frage {played} von {total}',
+    shout: 'Jubelt!',
+    verse: '„Da fiel die Mauer in sich zusammen.“ – Josua 6,20',
+    more_one: '+{count} weiterer zieht mit',
+    more_other: '+{count} weitere ziehen mit',
+    alt: 'Jericho und der Weg um seine Mauern',
+  },
   crowning: {
     title: 'Die Krönung',
     champion: 'Champion',
