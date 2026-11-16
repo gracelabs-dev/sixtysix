@@ -17,12 +17,15 @@ import { FlagButton } from '../../flags/FlagSheet'
 import { TeamStrip } from './game/Team'
 import { ArenaIntroView } from './game/Intro'
 import { PlayersFab } from '../shell/KickControls'
+import { OfflineBanner } from './OfflineBanner'
 
 /** Small leave/end control with confirmation, present in every game phase. */
 function LeaveControl({ role }: { role: string | null }) {
   const t = useT()
   const isHost = role === 'host'
   const leaveArena = useArenaStore((s) => s.leaveArena)
+  const finish = useArenaStore((s) => s.finish)
+  const phase = useArenaStore((s) => s.room?.phase)
   const [confirm, setConfirm] = useState(false)
   return (
     <>
@@ -37,6 +40,11 @@ function LeaveControl({ role }: { role: string | null }) {
           cancel={isHost ? t('arena.game.keepPlaying') : t('arena.game.stay')}
           onConfirm={leaveArena}
           onCancel={() => setConfirm(false)}
+          alt={
+            isHost && phase !== 'podium'
+              ? { label: t('arena.game.finishNow'), onClick: () => (setConfirm(false), finish()) }
+              : undefined
+          }
         />
       )}
     </>
@@ -218,6 +226,7 @@ export function ArenaGameScreen() {
 
   return (
     <div className="screen arena-game-shell">
+      <OfflineBanner />
       {!isPlayer && <RotateHint />}
       {/* Always offer a way out, unless the Crowning shows its own buttons. */}
       {(phase !== 'podium' || !scene) && <LeaveControl role={role} />}

@@ -34,7 +34,7 @@ export default {
     mightiest: 'Stärkste Schleuderer',
     fallen: 'Der Riese ist gefallen!',
     stands: 'Goliat steht noch',
-    fallenVerse: '„Der Streit ist des HERRN.“ – 1. Samuel 17,47',
+    fallenVerse: '„Der Streit ist des HERRN.“ – 1. Samuel 17,47',
     left: 'Ihm bleiben {pct} % seiner Kraft – sammelt eure Steine und versucht es noch mal!',
   },
   wall: {

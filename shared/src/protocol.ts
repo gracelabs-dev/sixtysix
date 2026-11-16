@@ -111,7 +111,7 @@ export interface GoliathState {
 export interface TeamState {
   id: number
   name: string
-  /** Wall height in stones = team's average score / 100 (fair for uneven teams). */
+  /** Wall height in stones = the sum of the team's average gain per question / 100 (fair for uneven teams). */
   stones: number
   /** Stones added by the last question. */
   lastGain: number
@@ -240,6 +240,8 @@ export interface ClientToServerEvents {
   'host:rematch': () => void
   /** Host advances the game: resolves the question / skips the leaderboard wait. */
   'host:skip': (from: ArenaPhase) => void
+  /** Stop after this question and go straight to the podium (scores so far count). */
+  'host:finish': () => void
   'player:answer': (payload: { index: number }) => void
 }
 

@@ -37,7 +37,7 @@ export default {
     mightiest: 'Mightiest slingers',
     fallen: 'The giant has fallen!',
     stands: 'Goliath still stands',
-    fallenVerse: '“The battle is the LORD’s.” — 1 Samuel 17:47',
+    fallenVerse: '“The battle is the LORD’s.” — 1 Samuel 17:47',
     left: '{pct}% of his strength left — gather your stones and try again!',
   },
   wall: {

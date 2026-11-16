@@ -29,6 +29,8 @@ interface ArenaStore {
   room: RoomState | null
   error: string | null
   busy: boolean
+  /** The socket is connected (false while a phone is between networks; it rejoins by itself). */
+  online: boolean
   /** Code captured from a /join/CODE URL before the user gets there. */
   prefillCode: string
 
@@ -68,6 +70,8 @@ interface ArenaStore {
   /** Host, lobby, wall mode: deal new teams at random. */
   shuffleTeams: () => void
   skip: () => void
+  /** Host: straight to the podium with the scores so far. */
+  finish: () => void
   joinGame: (code: string) => void
   watchGame: (code: string) => void
   answer: (index: number) => void
@@ -195,14 +199,17 @@ function getSocket(): ArenaSocket {
   const setState = useArenaStore.setState
   const getState = useArenaStore.getState
 
+  socket.on('disconnect', () => setState({ online: false }))
   socket.on('connect', () => {
+    setState({ online: true })
     // Transparent recovery after a drop: rejoin / reclaim with stable ids.
     const { role, room } = getState()
     if (!room || !role || !socket) return
     // If the room died while we were offline (host gone, server restart), the
     // rejoin is refused and room:closed was never received — close here.
     enterRoom(socket, role, room.code, (res) => {
-      if (!res.ok) closeLocally(res.error ?? t('arena.errors.ended'))
+      // The room is gone (not a typo of theirs): say the game ended; a kick keeps its own reason.
+      if (!res.ok) closeLocally(res.error === 'The host removed you from this game.' ? res.error : t('arena.errors.ended'))
     })
   })
 
@@ -230,6 +237,12 @@ function getSocket(): ArenaSocket {
   })
 
   socket.on('game:question', (q, phase, endsInMs, yourAnswer) => {
+    // An answer tapped during a wifi blip reaches the server before the rejoin and is dropped:
+    // the rejoin's re-send says "no answer", so send ours again while the question is open.
+    const mine = getState().myAnswer
+    if (phase === 'question' && endsInMs > 0 && yourAnswer == null && mine !== null && getState().question?.index === q.index) {
+      socket?.emit('player:answer', { index: mine })
+    }
     setState((s) => ({
       question: q,
       phaseEndsAt: Date.now() + endsInMs,
@@ -311,6 +324,7 @@ export const useArenaStore = create<ArenaStore>((set) => ({
   room: null,
   error: null,
   busy: false,
+  online: true,
   prefillCode: '',
   phaseEndsAt: 0,
   phaseDuration: 0,
@@ -342,6 +356,11 @@ export const useArenaStore = create<ArenaStore>((set) => ({
   },
 
   setOptions: (config) => {
+    try {
+      localStorage.setItem('sixtysix.arenaOptions.v1', JSON.stringify(config)) // the next game starts from these
+    } catch {
+      // storage unavailable — not remembered
+    }
     getSocket().emit('host:options', config)
   },
 
@@ -351,6 +370,10 @@ export const useArenaStore = create<ArenaStore>((set) => ({
 
   shuffleTeams: () => {
     getSocket().emit('host:shuffleTeams')
+  },
+
+  finish: () => {
+    getSocket().emit('host:finish')
   },
 
   skip: () => {

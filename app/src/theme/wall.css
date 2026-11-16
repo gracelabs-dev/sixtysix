@@ -22,7 +22,8 @@
 .tm-more{ font: 800 12px/1 'Cinzel', serif; color: #e9c98a; }
 
 /* Host lobby: one column per gate */
-.tm-host-teams{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; width: 100%; }
+.tm-host-teams{ display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 10px; width: 100%; }
+@media (max-width: 700px) { .tm-host-teams{ grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); } }
 .tm-host-team{ display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px; border-radius: 12px; border: 2px solid var(--c); background: rgb(29 15 6 / 0.35); }
 .tm-host-team .player-chip-grid{ justify-content: center; }
 .tm-shuffle{ margin-top: 8px; }
@@ -119,3 +120,5 @@
 /* The finale's verdict covers the middle; the walls stay readable around it. */
 .wl.finale .wl-verdict{ z-index: 6; }
 .wl.finale .gl-actions{ z-index: 7; }
+/* Boards: the plates fill the bottom edge, so Play again / End go above the banner. */
+.wl.finale.wide .gl-actions{ top: 16px; bottom: auto; }

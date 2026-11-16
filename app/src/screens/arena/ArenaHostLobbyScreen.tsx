@@ -6,13 +6,13 @@ import { AnimatedNumber, useFirstKeys } from '../../motion'
 import { useLocale, useT } from '../../i18n'
 import { deckLabel } from '../../decks/deckLabel'
 import { InfoButton } from '../../tutorial/InfoButton'
-import { useIntro } from '../../tutorial/useIntro'
 import { rich } from './rich'
 import { RoomOptions } from './RoomOptions'
 import type { ArenaPlayer, RoomConfig } from '@sixtysix/shared'
 import { TeamPennant } from './game/Team'
 import { teamColor } from './modes'
 import { PlayerChip } from './PlayerChip'
+import { OfflineBanner } from './OfflineBanner'
 
 /** Host only: change the options in the lobby (also before "Play again" starts the next game). */
 function OptionsSheet({ initial, onClose }: { initial: RoomConfig; onClose: () => void }) {
@@ -26,18 +26,20 @@ function OptionsSheet({ initial, onClose }: { initial: RoomConfig; onClose: () =
         <div className="arena-section options-sheet-body">
           <RoomOptions value={config} onChange={setConfig} />
         </div>
-        <button
-          className="btn-play"
-          onClick={() => {
-            setOptions(config)
-            onClose()
-          }}
-        >
-          {t('arena.hostLobby.apply')}
-        </button>
-        <button className="btn-secondary" onClick={onClose}>
-          {t('arena.hostLobby.cancel')}
-        </button>
+        <div className="options-sheet-actions">
+          <button
+            className="btn-play"
+            onClick={() => {
+              setOptions(config)
+              onClose()
+            }}
+          >
+            {t('arena.hostLobby.apply')}
+          </button>
+          <button className="btn-secondary" onClick={onClose}>
+            {t('arena.hostLobby.cancel')}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -55,8 +57,6 @@ export function ArenaHostLobbyScreen() {
   const [qrSvg, setQrSvg] = useState('')
   const [joinOrigin, setJoinOrigin] = useState(window.location.origin)
   const [editing, setEditing] = useState(false)
-  // The host gets the intro; spectators (boards) never do.
-  useIntro('arena', role === 'host')
 
   // A localhost QR is unscannable by phones — ask the server for its LAN URL.
   useEffect(() => {
@@ -98,6 +98,7 @@ export function ArenaHostLobbyScreen() {
 
   return (
     <div className="screen host-lobby-screen emp">
+      <OfflineBanner />
       <header className="screen-topbar">
         <button className="icon-btn" onClick={leaveArena} title={isHost ? t('arena.hostLobby.close') : t('arena.hostLobby.stopWatching')}>
           ✕
@@ -133,7 +134,8 @@ export function ArenaHostLobbyScreen() {
         )}
       </div>
 
-      <div className="host-players">
+      {/* A big group: smaller chips, so a projector shows everyone without scrolling. */}
+      <div className={`host-players ${room.players.length > 60 ? 'crowd-xl' : room.players.length > 24 ? 'crowd' : ''}`}>
         <div className="host-players-heading">
           {room.players.length === 0 ? (
             t('arena.hostLobby.waitingPlayers')
@@ -145,7 +147,7 @@ export function ArenaHostLobbyScreen() {
         </div>
         {room.teams && room.players.length > 0 ? (
           // Rebuild the Wall: the teams as they stand (they form as people join).
-          <div className="tm-host-teams">
+          <div className="tm-host-teams" style={{ '--n': room.teams.length } as React.CSSProperties}>
             {room.teams.map((team) => (
               <div key={team.id} className="tm-host-team" style={{ '--c': teamColor(team.id) } as React.CSSProperties}>
                 <TeamPennant team={team} />

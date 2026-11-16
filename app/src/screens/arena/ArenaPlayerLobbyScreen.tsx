@@ -9,6 +9,7 @@ import { rich } from './rich'
 import { TeamCard } from './game/Team'
 import { myTeamOf } from './modes'
 import { PlayerChip } from './PlayerChip'
+import { OfflineBanner } from './OfflineBanner'
 
 export function ArenaPlayerLobbyScreen() {
   const t = useT()
@@ -25,6 +26,7 @@ export function ArenaPlayerLobbyScreen() {
 
   return (
     <div className="screen player-lobby-screen emp">
+      <OfflineBanner />
       <header className="screen-topbar">
         <button className="icon-btn" onClick={leaveArena} title={t('arena.playerLobby.leave')}>
           ✕
@@ -54,7 +56,8 @@ export function ArenaPlayerLobbyScreen() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...spring.gentle, delay: 0.15 }}
         >
-          {player.name}
+          {/* The room's name for you: a second "Lena" is "Lena 2" on the board too. */}
+          {room.players.find((p) => p.id === myPlayerId)?.name ?? player.name}
         </motion.div>
         <div className="chip">{t('arena.playerLobby.game', { code: room.code })}</div>
         <div className="chip chip-mode">{t(`arena.modes.${room.config.mode ?? 'classic'}.label`)}</div>

@@ -2,7 +2,7 @@ import type { Server, Socket } from 'socket.io'
 import { DIFFICULTY_PRESETS, type ArenaPhase, type ClientToServerEvents, type RoomConfig, type ServerToClientEvents } from '@sixtysix/shared'
 import { ARENA_MODES, CATEGORIES } from '@sixtysix/shared'
 import { KICKED, addOrRebindPlayer, deleteRoom, findRoomBySocket, getRoom, createRoom, toPublicState, touch, type Room } from './rooms.js'
-import { backToLobby, broadcastState, endIfEmpty, handleAnswer, resolveIfAllAnswered, sendCurrentPhase, skipPhase, startGame } from './game.js'
+import { backToLobby, broadcastState, broadcastStateSoon, endIfEmpty, finishNow, handleAnswer, resolveIfAllAnswered, sendCurrentPhase, skipPhase, startGame } from './game.js'
 import { assignLateJoiner, formTeams } from './modes.js'
 import { deckInfo } from './decks.js'
 
@@ -80,9 +80,11 @@ export function registerArenaHandlers(io: IO, socket: ArenaSocket): void {
     const result = addOrRebindPlayer(room, payload.playerId, socket.id, payload.name, payload.avatar, payload.xp)
     if ('error' in result) return ack({ ok: false, error: result.error })
     assignLateJoiner(room, result.player)
+    // The same device on a new socket (second tab, reconnect before the old one dropped): the old one stops listening.
+    if ('oldSocketId' in result && result.oldSocketId) void io.sockets.sockets.get(result.oldSocketId)?.leave(room.code)
     void socket.join(room.code)
     ack({ ok: true, playerId: result.player.id, state: toPublicState(room) })
-    broadcastState(io, room)
+    broadcastStateSoon(io, room)
     sendCurrentPhase(room, socket, payload.playerId)
     console.log(`[arena] ${result.player.name} ${result.rejoined ? 'rejoined' : 'joined'} ${room.code} (${room.players.size} players)`)
   })
@@ -156,6 +158,11 @@ export function registerArenaHandlers(io: IO, socket: ArenaSocket): void {
     skipPhase(io, room)
   })
 
+  on('host:finish', () => {
+    const room = hostedRoom(socket)
+    if (room) finishNow(io, room)
+  })
+
   on('host:kick', (raw) => {
     const room = hostedRoom(socket)
     const id = (raw as { playerId?: unknown } | undefined)?.playerId
@@ -227,7 +234,7 @@ function dropPlayer(io: IO, room: Room, secret: string, explicit: boolean): void
     if (p) p.connected = false // mid-game drop: keep score for reconnection
   }
   touch(room)
-  broadcastState(io, room)
+  broadcastStateSoon(io, room)
   // Only explicit leaves end a game early — a locked phone may come back.
   if (explicit) endIfEmpty(io, room)
   // The others may all have answered already: don't wait for the leaver.

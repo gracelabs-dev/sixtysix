@@ -27,6 +27,8 @@ import { useAccountStore } from './account/accountStore'
 import { initFlags } from './flags/flagStore'
 import { silenceTutorials } from './tutorial/store'
 import { loadBoard } from './game/boardSession'
+import { isLocale } from '@sixtysix/shared'
+import { useLocale } from './i18n'
 
 // One delegated listener gives every button a click sound. Answer buttons
 // are excluded — they have their own (louder) submit sound.
@@ -38,6 +40,14 @@ document.addEventListener(
   },
   { capture: true },
 )
+
+// Links from the church page carry ?lang=; /host opens Bible Blitz's host screen.
+const langParam = new URLSearchParams(window.location.search).get('lang')
+if (isLocale(langParam)) useLocale.getState().setLocale(langParam)
+if (/^\/host\/?$/.test(window.location.pathname)) {
+  useGameStore.getState().goTo('arenaMenu')
+  window.history.replaceState(null, '', '/')
+} else if (langParam) window.history.replaceState(null, '', window.location.pathname)
 
 // QR codes encode /join/CODE — land straight on the arena join screen.
 const joinMatch = /^\/join\/([A-Za-z0-9]{4,8})$/.exec(window.location.pathname)

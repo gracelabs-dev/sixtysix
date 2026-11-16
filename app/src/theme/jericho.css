@@ -170,8 +170,14 @@
 /* Phones: the leaders by name under the map (your own standing panel follows below). */
 .jr-mini{ flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 5px; padding: 8px 12px 6px; }
 .jr-mrow{
-  flex: none; display: flex; align-items: center; gap: 0.55em; height: 38px; padding: 0 0.7em; border-radius: 9px;
+  flex: 0 1 38px; min-height: 24px; display: flex; align-items: center; gap: 0.55em; padding: 0 0.7em; border-radius: 9px;
   background: #ffffff0f; border: 1px solid #f2c35b2e; font-size: 15px;
+}
+/* Short phones (360×640): the rows squeeze so your own row (last) stays in view above the standing panel. */
+@media (max-height: 700px) {
+  .jr-mini{ gap: 3px; padding-top: 5px; }
+  .jr-mrow{ font-size: 13px; }
+  .jr-mrow .jr-pf.painted-portrait{ width: 22px; height: 22px; }
 }
 .jr-mrow .jr-pf.painted-portrait{ width: 28px; height: 28px; box-shadow: 0 0 0 2px var(--c), 0 0 0 3px #000; }
 .jr-mrow.you{ background: linear-gradient(90deg, #ffe08a55, #ffe08a14); border-color: #ffe08a; }

@@ -765,6 +765,8 @@
 .emp .seg-btn.selected,
 .emp .avatar-option.selected { background: linear-gradient(#ffe08a, #d39b22); border-color: #1d0f06; box-shadow: 0 2px 0 #1d0f06; }
 .emp .btn-play,
+/* Long words (hu "CSATLAKOZOM") must fit a 360 px phone. */
+.emp .join-btn { font-size: clamp(1.1rem, 5.6vw, 1.5rem); }
 .emp .join-btn { background: linear-gradient(#ffe08a, #c98a12); color: #2b1408; border: 2px solid #1d0f06; box-shadow: 0 4px 0 #1d0f06; font-family: 'Cinzel', serif; font-weight: 900; }
 .emp .btn-secondary { background: rgb(29 15 6 / 0.8); color: #ffe7a3; border: 2px solid #e3b754; font-family: 'Cinzel', serif; font-weight: 700; }
 .emp .chip { background: rgb(29 15 6 / 0.8); border-color: #e3b754; color: #ffe7a3; }
@@ -777,6 +779,17 @@
 .emp .player-chip { background: #f3e2bb; border-color: #b88a3a; color: #3b2412; font-family: 'Cinzel', serif; font-weight: 700; }
 .emp .player-lobby-name { color: #ffe7a3; font-family: 'Cinzel Decorative', serif; text-shadow: 0 2px 4px #000; }
 .emp .player-lobby-wait { color: #f3e2bb; }
+.arena-offline {
+  position: fixed; top: max(0.5rem, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 60;
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.9rem; border-radius: 999px;
+  background: rgba(20, 14, 8, 0.88); color: #fff; font-size: 0.9rem; font-weight: 600; white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  animation: arena-offline-in 0.2s 1.5s both;
+}
+@keyframes arena-offline-in { from { opacity: 0; visibility: hidden; } }
+.arena-offline-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #e0a526; animation: arena-offline-blink 1s ease-in-out infinite; }
+@keyframes arena-offline-blink { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .arena-offline-dot { animation: none; } }
 .emp .arena-error { background: #b3262b; color: #fff; border-radius: 8px; padding: 0.5rem 0.8rem; }
 .emp .slot-name { color: #ffe7a3; }
 .emp .lobby-slot { background: rgb(29 15 6 / 0.78); border-color: #e3b754; color: #ffe7a3; }
@@ -1217,6 +1230,14 @@
 .modal-card.options-sheet{ width: min(440px, 94%); max-height: 92dvh; overflow-y: auto; background: #2a160b; border-color: #b88a3a; text-align: left; }
 .emp .options-sheet .modal-title{ color: #ffe7a3; font-family: 'Cinzel Decorative', serif; text-align: center; }
 .modal-card.options-sheet{ padding: 0.8rem; }
+/* Save / Cancel stay in view on a 768 px laptop while the options scroll. */
+.options-sheet-actions{ position: sticky; bottom: -0.8rem; margin: 0 -0.8rem -0.8rem; padding: 0.6rem 0.8rem 0.8rem; background: #2a160b; box-shadow: 0 -8px 14px rgb(0 0 0 / 0.35); display: flex; flex-direction: column; gap: 0.4rem; }
+.options-sheet-actions > button{ margin: 0; }
+/* Host lobby with a big group: smaller chips so everyone fits on the projector. */
+.host-players.crowd .player-chip{ font-size: 0.72rem; padding-top: 0.15rem; padding-bottom: 0.15rem; }
+.host-players.crowd .player-chip-grid{ gap: 0.3rem; }
+.host-players.crowd-xl .player-chip{ font-size: 0.66rem; padding: 0.1rem 0.4rem 0.1rem 0.15rem; }
+.host-players.crowd-xl .player-chip-grid{ gap: 0.2rem; }
 .emp .options-sheet-body{ gap: 0.45rem; padding: 0.55rem; }
 .options-sheet-body .category-chips .seg-btn{ min-width: 0; padding-left: 0.1rem; padding-right: 0.1rem; font-size: 0.72rem; }
 

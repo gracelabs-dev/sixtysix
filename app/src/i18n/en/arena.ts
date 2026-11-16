@@ -1,7 +1,7 @@
 /** Bible Blitz (live group quiz): menu, lobbies, in-game controls, and the server's messages. */
 export default {
   modes: {
-    classic: { label: '👑 Classic', desc: 'Everyone for themselves — race up the Road to the Throne.' },
+    classic: { label: '👑 Classic', desc: 'Everyone for themselves — march round Jericho until its walls fall.' },
     goliath: { label: '🪨 David vs Goliath', desc: 'The whole room against one giant. Every right answer is a stone from the sling.' },
     wall: { label: '🧱 Rebuild the Wall', desc: 'Teams race to rebuild their gate of Jerusalem (Nehemiah 3). Needs 2+ players.' },
   },
@@ -60,11 +60,13 @@ export default {
     text: 'The host board is a landscape view — rotate to landscape, or open it on a laptop, tablet, or TV that everyone can see.',
   },
   game: {
+    reconnecting: 'Connection lost, reconnecting…',
     end: 'End',
     leave: 'Leave',
     endTitle: 'End the game?',
     leaveTitle: 'Leave the game?',
-    endText: 'This ends the game for all players in the room.',
+    endText: 'Show the winners now with the points so far, or close the game for everyone without results.',
+    finishNow: '🏆 Show the winners now',
     leaveText: 'You’ll drop out of this game and lose your score.',
     endGame: 'End game',
     leaveGame: 'Leave game',
@@ -80,7 +82,7 @@ export default {
     solo: 'Our challenger',
     teams: 'The builders take their gates',
     level: 'Level {n}',
-    sub: { classic: 'Who will reach the throne?', goliath: 'Who will bring down the giant?', wall: 'Which wall will rise first?' },
+    sub: { classic: 'Who will lead the march on Jericho?', goliath: 'Who will bring down the giant?', wall: 'Which wall will rise first?' },
     ready: 'Ready…',
     set: 'Set…',
     go: 'Go!',

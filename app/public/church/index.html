@@ -181,8 +181,15 @@
   try { s = localStorage.getItem('sixtysix.locale.v1') } catch (e) {}
   var n = (navigator.language || 'de').slice(0, 2)
   var l = [q, h, s, n].filter(function (x) { return L.indexOf(x) > -1 })[0] || 'de'
+  var T = {
+    de: [document.title, (document.querySelector('meta[name="description"]') || {}).content],
+    en: ['66 for your church · A Bible quiz for the whole group', '66 is a free Bible quiz for youth groups, church evenings and small groups: questions on the projector, answers on phones. No app, no account, no ads.'],
+    hu: ['66 a gyülekezetednek · Bibliakvíz az egész csoportnak', 'A 66 ingyenes bibliakvíz ifjúsági csoportoknak, gyülekezeti estékre és házicsoportoknak: kérdések a kivetítőn, válaszok a telefonon. Se app, se regisztráció, se reklám.'],
+  }
   function show(l) {
     document.documentElement.lang = l
+    document.title = T[l][0]
+    var d = document.querySelector('meta[name="description"]'); if (d) d.setAttribute('content', T[l][1])
     L.forEach(function (k) {
       var e = document.getElementById(k); if (e) e.hidden = k !== l
       var a = document.querySelector('.top nav a[href="#' + k + '"]'); if (a) a.className = k === l ? 'on' : ''
@@ -231,7 +238,7 @@
       <h1>Ein Bibelquiz-Abend für eure ganze Gruppe</h1>
       <p class="promise">Ein Beamer, ihre Handys, in zwei Minuten startklar.</p>
       <div class="ctas">
-        <a class="btn" href="/">Jetzt ein Spiel hosten</a>
+        <a class="btn" href="/host?lang=de">Jetzt ein Spiel hosten</a>
         <a class="btn ghost" href="#material">Material herunterladen</a>
       </div>
       <p class="safe">Gratis · keine Werbung · kein Tracking · ohne App und ohne Konto</p>
@@ -296,7 +303,7 @@
         <div class="pills"><span>Advent: Die Verheissung</span><span>Weihnachten: Die Heilige Nacht</span><span>Weihnachten: Für Profis</span></div>
       </div>
     </div>
-    <div class="center"><a class="btn" href="/">Jetzt ausprobieren</a></div>
+    <div class="center"><a class="btn" href="/host?lang=de">Jetzt ausprobieren</a></div>
   </div>
 </section>
 
@@ -419,13 +426,13 @@ Bring dein Handy mit: QR-Code scannen, Namen eingeben, los geht’s. Wer erobert
         <a class="btn small" href="mailto:hello@gracelabs.dev?subject=66%20f%C3%BCr%20unsere%20Gemeinde">hello@gracelabs.dev</a>
       </div>
     </div>
-    <div class="center"><a class="btn" href="/">Jetzt ein Spiel hosten</a></div>
+    <div class="center"><a class="btn" href="/host?lang=de">Jetzt ein Spiel hosten</a></div>
   </div>
 </section>
 
 <footer>
   <div class="made">66 · entwickelt mit ❤️ von Grace Labs in 🇨🇭</div>
-  <p><a href="/">Zum Spiel</a><a href="/privacy/#de">Datenschutz</a><a href="https://gracelabs.dev/de/imprint/">Impressum</a></p>
+  <p><a href="/?lang=de">Zum Spiel</a><a href="/privacy/#de">Datenschutz</a><a href="https://gracelabs.dev/de/imprint/">Impressum</a></p>
 </footer>
 </main>
 
@@ -438,7 +445,7 @@ Bring dein Handy mit: QR-Code scannen, Namen eingeben, los geht’s. Wer erobert
       <h1>A Bible quiz night for your whole group</h1>
       <p class="promise">One screen, their phones, ready in two minutes.</p>
       <div class="ctas">
-        <a class="btn" href="/">Host a game now</a>
+        <a class="btn" href="/host?lang=en">Host a game now</a>
         <a class="btn ghost" href="#how">How it works</a>
       </div>
       <p class="safe">Free · no ads · no tracking · no app and no account</p>
@@ -479,7 +486,7 @@ Bring dein Handy mit: QR-Code scannen, Namen eingeben, los geht’s. Wer erobert
         <div class="pills"><span>Advent: The Promise</span><span>Christmas: The Holy Night</span><span>Christmas: For Pros</span></div>
       </div>
     </div>
-    <div class="center"><a class="btn" href="/">Try it now</a></div>
+    <div class="center"><a class="btn" href="/host?lang=en">Try it now</a></div>
   </div>
 </section>
 
@@ -580,13 +587,13 @@ Bring your phone: scan the QR code, enter a name, go. Who will take Jericho? �
         <a class="btn small" href="mailto:hello@gracelabs.dev?subject=66%20for%20our%20church">hello@gracelabs.dev</a>
       </div>
     </div>
-    <div class="center"><a class="btn" href="/">Host a game now</a></div>
+    <div class="center"><a class="btn" href="/host?lang=en">Host a game now</a></div>
   </div>
 </section>
 
 <footer>
   <div class="made">66 · made with ❤️ by Grace Labs in 🇨🇭</div>
-  <p><a href="/">Play</a><a href="/privacy/#en">Privacy</a><a href="https://gracelabs.dev/en/imprint/">Imprint</a></p>
+  <p><a href="/?lang=en">Play</a><a href="/privacy/#en">Privacy</a><a href="https://gracelabs.dev/en/imprint/">Imprint</a></p>
 </footer>
 </main>
 
@@ -599,7 +606,7 @@ Bring your phone: scan the QR code, enter a name, go. Who will take Jericho? �
       <h1>Bibliakvíz-est az egész csoportotoknak</h1>
       <p class="promise">Egy kivetítő, a telefonjaik, és két perc alatt indulhat.</p>
       <div class="ctas">
-        <a class="btn" href="/">Játék indítása most</a>
+        <a class="btn" href="/host?lang=hu">Játék indítása most</a>
         <a class="btn ghost" href="#hogyan">Hogyan működik?</a>
       </div>
       <p class="safe">Ingyenes · reklám nélkül · követés nélkül · alkalmazás és fiók nélkül</p>
@@ -640,7 +647,7 @@ Bring your phone: scan the QR code, enter a name, go. Who will take Jericho? �
         <div class="pills"><span>Advent: Az ígéret</span><span>Karácsony: A szent éjszaka</span><span>Karácsony: Profiknak</span></div>
       </div>
     </div>
-    <div class="center"><a class="btn" href="/">Kipróbálom</a></div>
+    <div class="center"><a class="btn" href="/host?lang=hu">Kipróbálom</a></div>
   </div>
 </section>
 
@@ -740,13 +747,13 @@ Hozd a telefonodat: QR-kód beolvasása, név beírása, és indulhat. Ki foglal
         <a class="btn small" href="mailto:hello@gracelabs.dev?subject=66%20a%20gy%C3%BClekezet%C3%BCnknek">hello@gracelabs.dev</a>
       </div>
     </div>
-    <div class="center"><a class="btn" href="/">Játék indítása most</a></div>
+    <div class="center"><a class="btn" href="/host?lang=hu">Játék indítása most</a></div>
   </div>
 </section>
 
 <footer>
   <div class="made">66 · ❤️-vel fejlesztette a Grace Labs 🇨🇭</div>
-  <p><a href="/">Játék</a><a href="/privacy/#hu">Adatvédelem</a><a href="https://gracelabs.dev/hu/imprint/">Impresszum</a></p>
+  <p><a href="/?lang=hu">Játék</a><a href="/privacy/#hu">Adatvédelem</a><a href="https://gracelabs.dev/hu/imprint/">Impresszum</a></p>
 </footer>
 </main>
 

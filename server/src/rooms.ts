@@ -33,6 +33,7 @@ export interface Room {
   questions: Question[]
   questionIndex: number
   questionStartedAt: number
+  readingStartedAt: number
   /** The start intro (phase 'intro'): who it shows and when it began, for a rejoin mid-intro. */
   intro?: ArenaIntro
   introStartedAt: number
@@ -57,6 +58,11 @@ export interface Room {
   /** Wall mode: teams whose team voice changed, and the throttle timer (modes.ts). */
   teamVotesDirty: Set<number>
   teamVotesTimer?: ReturnType<typeof setTimeout>
+  /** Wall mode: each team's points so far (sum of its average gain per question). */
+  teamPoints: number[]
+  /** Coalesced broadcasts (joins, drops, answers), so a room of 200 isn't flooded. */
+  stateTimer?: ReturnType<typeof setTimeout>
+  countTimer?: ReturnType<typeof setTimeout>
 }
 
 const rooms = new Map<string, Room>()
@@ -89,6 +95,7 @@ export function createRoom(config: RoomConfig, hostId: string, hostSocketId: str
     questions: [],
     questionIndex: 0,
     questionStartedAt: 0,
+    readingStartedAt: 0,
     introStartedAt: 0,
     prevRanks: new Map(),
     lastEntries: [],
@@ -96,6 +103,7 @@ export function createRoom(config: RoomConfig, hostId: string, hostSocketId: str
     game: 1,
     requestedCount: config.questionCount,
     teamVotesDirty: new Set(),
+    teamPoints: [],
   }
   rooms.set(room.code, room)
   return room
@@ -111,6 +119,8 @@ export function deleteRoom(code: string): void {
     clearTimeout(room.timer)
     clearTimeout(room.hostGraceTimer)
     clearTimeout(room.teamVotesTimer)
+    clearTimeout(room.stateTimer)
+    clearTimeout(room.countTimer)
   }
   rooms.delete(code)
 }
@@ -119,11 +129,28 @@ export function touch(room: Room): void {
   room.lastActivity = Date.now()
 }
 
-/** NFC, strip control/format chars (keep ZWJ for emoji), cut by code point. */
+/** NFC, strip control/format chars (keep ZWJ for emoji) and blank look-alikes, at most 2 marks per letter, cut by code point. */
 export function cleanName(name: unknown): string {
   if (typeof name !== 'string') return 'Player'
-  const cleaned = name.normalize('NFC').replace(/[\p{Cc}\p{Cf}]/gu, (c) => (c === '\u200d' ? c : '')).trim()
-  return Array.from(cleaned).slice(0, 14).join('') || 'Player'
+  const cleaned = name
+    .normalize('NFC')
+    .replace(/[\p{Cc}\p{Cf}]/gu, (c) => (c === '\u200d' ? c : ''))
+    .replace(/[\u115f\u1160\u2800\u3164\uffa0]/g, '')
+    .replace(/(\p{M}{2})\p{M}+/gu, '$1')
+    .trim()
+  const cut = Array.from(cleaned).slice(0, 14).join('').trim()
+  return /[\p{L}\p{N}\p{Extended_Pictographic}]/u.test(cut) ? cut : 'Player'
+}
+
+/** Two "Anna"s in one room become "Anna" and "Anna 2", so the board and the podium can tell them apart. */
+function uniqueName(room: Room, name: string, self?: RoomPlayer): string {
+  const taken = new Set([...room.players.values()].filter((p) => p !== self).map((p) => p.name.toLocaleLowerCase()))
+  if (!taken.has(name.toLocaleLowerCase())) return name
+  for (let n = 2; ; n++) {
+    const tail = ` ${n}`
+    const candidate = Array.from(name).slice(0, 14 - tail.length).join('').trimEnd() + tail
+    if (!taken.has(candidate.toLocaleLowerCase())) return candidate
+  }
 }
 
 /** A look string (shared/src/looks.ts): old character ids stay valid, unknown parts become the default. Worn items are trusted here (family game). */
@@ -143,28 +170,30 @@ export function addOrRebindPlayer(
   name: unknown,
   avatar: unknown,
   xp?: unknown,
-): { player: RoomPlayer; rejoined: boolean } | { error: string } {
+): { player: RoomPlayer; rejoined: boolean; oldSocketId?: string } | { error: string } {
   if (room.banned.has(playerId)) return { error: KICKED }
   if (typeof name === 'string' && name.trim() && !isNameAllowed(name)) return { error: NAME_REFUSED }
   const existing = room.players.get(playerId)
   if (existing) {
+    const oldSocketId = existing.socketId !== socketId ? existing.socketId : undefined
     existing.socketId = socketId
     existing.connected = true
-    if (typeof name === 'string' && name.trim()) existing.name = cleanName(name)
+    // A rename only in the lobby: mid-game the board and the standings keep the name they show.
+    if (room.phase === 'lobby' && typeof name === 'string' && name.trim()) existing.name = uniqueName(room, cleanName(name), existing)
     if (avatar !== undefined) existing.avatar = cleanAvatar(avatar)
     if (xp !== undefined) {
       existing.xp = cleanXp(xp)
       existing.level = levelForXp(existing.xp)
     }
     touch(room)
-    return { player: existing, rejoined: true }
+    return { player: existing, rejoined: true, oldSocketId }
   }
   if (room.players.size >= MAX_ARENA_PLAYERS) return { error: 'Room is full' }
   if (room.phase === 'podium') return { error: 'This game has ended' }
   const player: RoomPlayer = {
     id: randomUUID(),
     socketId,
-    name: cleanName(name),
+    name: uniqueName(room, cleanName(name)),
     avatar: cleanAvatar(avatar),
     score: 0,
     connected: true,

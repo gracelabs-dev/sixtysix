@@ -34,7 +34,7 @@ export default {
     mightiest: 'Legerősebb parittyások',
     fallen: 'Az óriás elesett!',
     stands: 'Góliát még áll',
-    fallenVerse: '„Az Úré a harc.” – 1Sám 17,47',
+    fallenVerse: '„Az Úré a harc.” – 1Sám 17,47',
     left: 'Még {pct}% ereje maradt – gyűjtsétek össze a köveiteket, és próbáljátok újra!',
   },
   wall: {
