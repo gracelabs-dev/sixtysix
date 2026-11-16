@@ -2,6 +2,10 @@
 export default {
   bible: '📖 Bible',
   own: '🗂️ Own deck…',
+  featured: 'For the season',
+  source: 'Questions',
+  withVerses: '📖 with verses',
+  seasons: { christmas: '🎄 Advent & Christmas' },
   allQuestions: 'All {n} questions of the deck, in random order.',
   title: 'Question decks',
   mine: 'My decks',
