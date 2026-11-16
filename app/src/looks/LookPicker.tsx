@@ -72,7 +72,8 @@ const SLOT_ICON: Record<LookSlot, string> = { head: '👑', neck: '📿', frame:
 
 function LookPicker({ onClose }: { onClose: () => void }) {
   const t = useT()
-  useIntro('looks')
+  // Not while joining a game (a QR guest just wants in); Profile shows it.
+  useIntro('looks', useGameStore((s) => s.screen) === 'profile')
   const locale = useLocale((s) => s.locale)
   const avatar = useGameStore((s) => s.player.avatar)
   const coins = useGameStore((s) => s.player.coins)

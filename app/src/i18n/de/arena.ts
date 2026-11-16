@@ -1,6 +1,6 @@
 export default {
   modes: {
-    classic: { label: '👑 Klassisch', desc: 'Jeder für sich – ein Wettrennen den Weg zum Thron hinauf.' },
+    classic: { label: '👑 Klassisch', desc: 'Jeder für sich – im Marsch um Jericho, bis die Mauern fallen.' },
     goliath: { label: '🪨 David gegen Goliat', desc: 'Der ganze Raum gegen einen Riesen. Jede richtige Antwort ist ein Stein aus der Schleuder.' },
     wall: { label: '🧱 Die Mauer bauen', desc: 'Teams bauen um die Wette ihr Tor von Jerusalem wieder auf (Nehemia 3). Ab 2 Spielern.' },
   },
@@ -59,11 +59,13 @@ export default {
     text: 'Das Großbild ist im Querformat – dreh dein Gerät oder öffne es auf einem Laptop, Tablet oder Fernseher, den alle sehen.',
   },
   game: {
+    reconnecting: 'Verbindung weg, verbinde neu…',
     end: 'Beenden',
     leave: 'Verlassen',
     endTitle: 'Spiel beenden?',
     leaveTitle: 'Spiel verlassen?',
-    endText: 'Damit endet das Spiel für alle im Raum.',
+    endText: 'Zeig jetzt die Sieger mit den bisherigen Punkten, oder beende das Spiel für alle ohne Ergebnis.',
+    finishNow: '🏆 Jetzt die Sieger zeigen',
     leaveText: 'Du steigst aus diesem Spiel aus und verlierst deine Punkte.',
     endGame: 'Spiel beenden',
     leaveGame: 'Spiel verlassen',
@@ -79,7 +81,7 @@ export default {
     solo: 'Bereit zur Prüfung',
     teams: 'Die Bauleute an ihren Toren',
     level: 'Stufe {n}',
-    sub: { classic: 'Wer erreicht den Thron?', goliath: 'Wer bringt den Riesen zu Fall?', wall: 'Welche Mauer steht zuerst?' },
+    sub: { classic: 'Wer führt den Marsch um Jericho an?', goliath: 'Wer bringt den Riesen zu Fall?', wall: 'Welche Mauer steht zuerst?' },
     ready: 'Auf die Plätze…',
     set: 'Fertig…',
     go: 'Los!',

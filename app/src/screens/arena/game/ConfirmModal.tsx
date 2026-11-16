@@ -6,6 +6,7 @@ export function ConfirmModal({
   cancel,
   onConfirm,
   onCancel,
+  alt,
 }: {
   title: string
   text: string
@@ -13,12 +14,19 @@ export function ConfirmModal({
   cancel: string
   onConfirm: () => void
   onCancel: () => void
+  /** A gentler way out, shown first (the host's "show the winners now"). */
+  alt?: { label: string; onClick: () => void }
 }) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-title">{title}</div>
         <p className="modal-text">{text}</p>
+        {alt && (
+          <button className="btn-play" onClick={alt.onClick}>
+            {alt.label}
+          </button>
+        )}
         <button className="btn-play btn-danger" onClick={onConfirm}>
           {confirm}
         </button>

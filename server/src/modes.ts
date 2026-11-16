@@ -10,8 +10,8 @@ type IO = Server<ClientToServerEvents, ServerToClientEvents>
  * Arena game modes on top of the shared question loop (see RoomConfig.mode):
  * - goliath: the room's points are damage against one giant; he falls at 0 HP
  *   and the game ends early (victory for everyone).
- * - wall: players are split into gate teams (Neh 3) already in the lobby; a
- *   team's wall height is its AVERAGE score, so uneven teams stay fair. While
+ * - wall: players are split into gate teams (Neh 3) already in the lobby; each
+ *   question adds the team's AVERAGE gain to its wall, so uneven teams stay fair. While
  *   answering, each team hears its own "team voice" (queueTeamVotes below).
  */
 
@@ -19,9 +19,9 @@ type IO = Server<ClientToServerEvents, ServerToClientEvents>
 export const GATES = ['Sheep Gate', 'Fish Gate', 'Valley Gate', 'Fountain Gate']
 /**
  * Giant's health per player per question, in points. A correct answer scores
- * 500–1000, so ~45 % right at average speed brings him down on the last question.
+ * 500–1000, so ~60 % right at average speed brings him down on the last question.
  */
-const GOLIATH_HP_PER_PLAYER_QUESTION = 330
+const GOLIATH_HP_PER_PLAYER_QUESTION = 450
 
 function countMembers(room: Room): void {
   if (!room.teams) return
@@ -46,6 +46,7 @@ export function formTeams(room: Room, reshuffle = false): void {
   const n = teamCount(players.length)
   const teams: TeamState[] = GATES.slice(0, n).map((name, id) => ({ id, name, stones: 0, lastGain: 0, members: 0 }))
   room.teams = teams
+  room.teamPoints = teams.map(() => 0)
   if (reshuffle) shuffle([...players]).forEach((p, i) => (p.team = i % n))
   const size = (id: number) => players.filter((p) => p.team === id).length
   const bySize = () => teams.map((t) => t.id).sort((a, b) => size(a) - size(b) || a - b)
@@ -96,8 +97,11 @@ export function applyModeRound(room: Room): void {
   }
   if (room.teams) {
     for (const t of room.teams) {
+      // Each round adds the average gain of whoever is in the team now, so a late joiner (0 points so
+      // far) doesn't pull the wall down and a leaver's earlier stones stay in it.
       const members = players.filter((p) => p.team === t.id)
-      const stones = members.length ? Math.round(members.reduce((n, p) => n + p.score, 0) / members.length / 100) : 0
+      if (members.length) room.teamPoints[t.id] = (room.teamPoints[t.id] ?? 0) + members.reduce((n, p) => n + p.lastGain, 0) / members.length
+      const stones = Math.round((room.teamPoints[t.id] ?? 0) / 100)
       t.lastGain = Math.max(0, stones - t.stones)
       t.stones = stones
       t.members = members.length

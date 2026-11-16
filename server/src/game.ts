@@ -20,7 +20,15 @@ const REVEAL_MS = 4500 // correct answer + distribution
 const LEADERBOARD_MS = 6000 // Road to the Throne: gallop (~3 s) + time to read the new order
 
 export function broadcastState(io: IO, room: Room): void {
+  clearTimeout(room.stateTimer)
+  room.stateTimer = undefined
   io.to(room.code).emit('room:state', toPublicState(room))
+}
+
+/** Joins and drops: one state for everything within STATE_COALESCE_MS (a room of 200 filling up). */
+const STATE_COALESCE_MS = 400
+export function broadcastStateSoon(io: IO, room: Room): void {
+  room.stateTimer ??= setTimeout(() => broadcastState(io, room), STATE_COALESCE_MS)
 }
 
 function schedule(room: Room, fn: () => void, ms: number): void {
@@ -41,11 +49,15 @@ function publicQuestion(room: Room, q: Question): ArenaQuestion {
   }
 }
 
-/** Question ids each host has already played, so back-to-back games don't repeat. */
+/** Question ids each host has already played, so back-to-back games don't repeat (the most recent hosts only). */
 const playedByHost = new Map<string, Set<string>>()
+const PLAYED_HOSTS = 2000
 
 export function startGame(io: IO, room: Room): void {
   const played = playedByHost.get(room.hostId) ?? new Set<string>()
+  playedByHost.delete(room.hostId)
+  playedByHost.set(room.hostId, played)
+  if (playedByHost.size > PLAYED_HOSTS) playedByHost.delete(playedByHost.keys().next().value!)
   room.questions = room.config.deckId
     ? deckQuestions(room.config.deckId, room.config.questionCount)
     : pickQuestions(room.config.questionCount, {
@@ -105,6 +117,7 @@ function nextQuestion(io: IO, room: Room): void {
   const pub = publicQuestion(room, q)
 
   room.phase = 'reading'
+  room.readingStartedAt = Date.now()
   io.to(room.code).emit('game:question', pub, 'reading', READING_MS)
   broadcastState(io, room)
 
@@ -147,7 +160,7 @@ export function sendCurrentPhase(
   const remaining =
     room.phase === 'question'
       ? Math.max(0, QUESTION_TIME_MS - (Date.now() - room.questionStartedAt))
-      : READING_MS // close enough for a reading-phase rejoin
+      : Math.max(0, READING_MS - (Date.now() - room.readingStartedAt))
   const answered = secret ? room.players.get(secret)?.answer?.index : undefined
   socket.emit('game:question', publicQuestion(room, q), room.phase, remaining, answered)
   if (room.phase === 'question') {
@@ -195,21 +208,34 @@ export function endIfEmpty(io: IO, room: Room): void {
   finishGame(io, room)
 }
 
+/** Host: "show the winners now". The current question is not scored. */
+export function finishNow(io: IO, room: Room): void {
+  if (room.phase === 'lobby' || room.phase === 'podium') return
+  clearTimeout(room.timer)
+  finishGame(io, room)
+}
+
 /** Pay the finishing coins (by mode), then show the podium / finale. */
 function finishGame(io: IO, room: Room): void {
   room.phase = 'podium'
-  const sorted = [...room.players.values()].sort((a, b) => b.score - a.score)
-  sorted.forEach((p, rank) => (p.coins += finalBonus(room, p, rank)))
+  // Equal points, equal coins: the placement is the number of players strictly ahead.
+  const scores = [...room.players.values()].map((p) => p.score)
+  for (const p of room.players.values()) p.coins += finalBonus(room, p, scores.filter((s) => s > p.score).length)
   room.lastEntries = computeLeaderboard(room)
   io.to(room.code).emit('game:podium', room.lastEntries)
   broadcastState(io, room)
   console.log(`[game] ${room.code} finished`)
 }
 
-/** Who has answered so far — players see faces, boards see the count. */
+/** Who has answered so far — players see faces, boards see the count. At most every ANSWERED_MS. */
+const ANSWERED_MS = 300
 function emitAnswered(io: IO, room: Room): void {
-  const ids = answeredIds(room)
-  io.to(room.code).emit('game:answerCount', ids.length, ids)
+  room.countTimer ??= setTimeout(() => {
+    room.countTimer = undefined
+    if (room.phase !== 'question') return
+    const ids = answeredIds(room)
+    io.to(room.code).emit('game:answerCount', ids.length, ids)
+  }, ANSWERED_MS)
 }
 
 export function handleAnswer(io: IO, room: Room, playerId: string, index: unknown): void {

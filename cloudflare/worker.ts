@@ -48,14 +48,16 @@ export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url)
     if (pathname.startsWith('/api/') || pathname === '/ws' || pathname === '/healthz') return toGame(request, env)
+    const isHtml = (r: Response) => (r.headers.get('content-type') ?? '').includes('text/html')
     if (pathname.endsWith('.mp4')) {
       const file = await env.ASSETS.fetch(new Request(request.url, { headers: request.headers }))
-      if (file.status === 200) return withRange(request, file)
+      if (file.status === 200 && !isHtml(file)) return withRange(request, file)
+      return new Response('Not found', { status: 404 })
     }
     const res = await env.ASSETS.fetch(request)
     // A missing build file must be a 404, not the app page (the single-page fallback): the service
     // worker would cache that page as if it were the script.
-    if (pathname.startsWith('/assets/') && (res.headers.get('content-type') ?? '').includes('text/html')) {
+    if (pathname.startsWith('/assets/') && isHtml(res)) {
       return new Response('Not found', { status: 404 })
     }
     return res

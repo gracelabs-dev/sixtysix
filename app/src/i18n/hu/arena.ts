@@ -1,6 +1,6 @@
 export default {
   modes: {
-    classic: { label: '👑 Klasszikus', desc: 'Mindenki magáért – versenyezz fel a trónhoz vezető úton.' },
+    classic: { label: '👑 Klasszikus', desc: 'Mindenki magáért – vonuljatok Jerikó körül, amíg le nem omlanak a falai.' },
     goliath: { label: '🪨 Dávid és Góliát', desc: 'Az egész terem egy óriás ellen. Minden helyes válasz egy kő a parittyából.' },
     wall: { label: '🧱 Építsd fel a falat', desc: 'A csapatok versenyt építik újjá Jeruzsálem egy-egy kapuját (Nehémiás 3). Legalább 2 játékos kell hozzá.' },
   },
@@ -59,11 +59,13 @@ export default {
     text: 'A kivetítő fekvő nézet – fordítsd fekvő helyzetbe, vagy nyisd meg egy laptopon, tableten vagy tévén, amit mindenki lát.',
   },
   game: {
+    reconnecting: 'Megszakadt a kapcsolat, újracsatlakozás…',
     end: 'Vége',
     leave: 'Kilépés',
     endTitle: 'Befejezed a játékot?',
     leaveTitle: 'Kilépsz a játékból?',
-    endText: 'Ezzel a teremben mindenkinek véget ér a játék.',
+    endText: 'Hirdess most eredményt az eddigi pontokkal, vagy zárd le a játékot mindenkinek eredmény nélkül.',
+    finishNow: '🏆 Eredményhirdetés most',
     leaveText: 'Kiesel ebből a játékból, és elveszíted a pontjaidat.',
     endGame: 'Játék befejezése',
     leaveGame: 'Kilépés',
@@ -79,7 +81,7 @@ export default {
     solo: 'A kihívó',
     teams: 'Az építők elfoglalják kapuikat',
     level: '{n}. szint',
-    sub: { classic: 'Ki ér fel a trónhoz?', goliath: 'Ki dönti le az óriást?', wall: 'Melyik fal áll elsőként?' },
+    sub: { classic: 'Ki vezeti a menetet Jerikó körül?', goliath: 'Ki dönti le az óriást?', wall: 'Melyik fal áll elsőként?' },
     ready: 'Vigyázz…',
     set: 'Kész…',
     go: 'Rajt!',

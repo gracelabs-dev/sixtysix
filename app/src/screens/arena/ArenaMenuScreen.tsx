@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { isNameAllowed, type RoomConfig } from '@sixtysix/shared'
 import { tServer, useLocale, useT } from '../../i18n'
 import { InfoButton } from '../../tutorial/InfoButton'
+import { introThen } from '../../tutorial/store'
 import { useGameStore } from '../../game/store'
 import { useArenaStore } from '../../arena/arenaStore'
 import { LookButton } from '../../looks/LookPicker'
@@ -66,7 +67,8 @@ export function ArenaMenuScreen() {
     } catch {
       // storage unavailable — the choice just isn't remembered
     }
-    hostGame(config)
+    // The intro shows before the room opens, so it never covers the projected code and QR.
+    introThen('arena', () => hostGame(config))
   }
 
   const join = () => {
@@ -141,6 +143,8 @@ export function ArenaMenuScreen() {
       </header>
 
       <div className="arena-menu-body">
+        {/* At the top, where a phone sees it without scrolling (a wrong code, a game that ended). */}
+        {error && <div className="arena-error" role="alert">{tServer(error)}</div>}
         {prefillCode ? (
           <>
             {joinSection}
@@ -154,8 +158,6 @@ export function ArenaMenuScreen() {
             {joinSection}
           </>
         )}
-
-        {error && <div className="arena-error">{tServer(error)}</div>}
       </div>
     </div>
   )
