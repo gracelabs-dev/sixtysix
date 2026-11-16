@@ -24,11 +24,32 @@ async function toGame(request: Request, env: Env): Promise<Response> {
   }
 }
 
+// The asset store ignores Range, and Safari plays <video> only from byte ranges (206).
+async function withRange(request: Request, res: Response): Promise<Response> {
+  const buf = await res.arrayBuffer()
+  const headers = new Headers(res.headers)
+  headers.set('accept-ranges', 'bytes')
+  headers.delete('content-encoding')
+  const m = /^bytes=(\d*)-(\d*)$/.exec(request.headers.get('range') ?? '')
+  if (!m || (!m[1] && !m[2])) {
+    headers.set('content-length', String(buf.byteLength))
+    return new Response(request.method === 'HEAD' ? null : buf, { status: 200, headers })
+  }
+  const size = buf.byteLength
+  const start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]))
+  const end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1
+  if (start >= size || start > end) return new Response(null, { status: 416, headers: { 'content-range': `bytes */${size}` } })
+  headers.set('content-range', `bytes ${start}-${end}/${size}`)
+  headers.set('content-length', String(end - start + 1))
+  return new Response(request.method === 'HEAD' ? null : buf.slice(start, end + 1), { status: 206, headers })
+}
+
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url)
     if (pathname.startsWith('/api/') || pathname === '/ws' || pathname === '/healthz') return toGame(request, env)
     const res = await env.ASSETS.fetch(request)
+    if (pathname.endsWith('.mp4') && res.status === 200) return withRange(request, res)
     // A missing build file must be a 404, not the app page (the single-page fallback): the service
     // worker would cache that page as if it were the script.
     if (pathname.startsWith('/assets/') && (res.headers.get('content-type') ?? '').includes('text/html')) {
