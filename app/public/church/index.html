@@ -1,60 +1,431 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex">
-<style>
-  :root{color-scheme:dark light;--bg:#1d120b;--fg:#efe2c8;--h1:#ffe2a8;--accent:#ffcf6b;--line:#6b4a2b;--mute:#a8957a;--card:#2a1b11;--btnfg:#2a1704}
-  @media (prefers-color-scheme:light){:root{--bg:#fbf4e4;--fg:#3a2713;--h1:#5a3510;--accent:#8a4e00;--line:#d9c39a;--mute:#7a6648;--card:#f3e8cc;--btnfg:#fff8e6}}
-  body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
-  main{max-width:720px;margin:0 auto;padding:40px 20px 80px}
-  h1{font-size:34px;line-height:1.15;margin:0 0 8px;color:var(--h1)}
-  h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:34px 0 8px}
-  h3{font-size:17px;margin:14px 0 2px;color:var(--h1)}
-  p,li{margin:0 0 10px}ul,ol{padding-left:20px}
-  a{color:var(--accent)}
-  nav{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap}
-  nav a{padding:6px 12px;border:1px solid var(--line);border-radius:99px;text-decoration:none;font-size:14px}
-  nav a.on{background:var(--accent);color:var(--btnfg);border-color:var(--accent)}
-  section{scroll-margin-top:20px}
-  .lead{font-size:20px;line-height:1.5}
-  .btn{display:inline-block;margin:10px 0 6px;padding:14px 30px;border-radius:99px;background:var(--accent);color:var(--btnfg);font-weight:700;font-size:19px;text-decoration:none}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:0 0 12px}
-  .card h3{margin-top:0}.card p:last-child{margin-bottom:0}
-  .small{color:var(--mute);font-size:14px}
-  .back{display:inline-block;margin-top:30px}
-</style>
-<script>
-(function(){
-  var L=['en','de','hu'],q=(location.search.match(/[?&]lang=(\w+)/)||[])[1],s,h=location.hash.slice(1);
-  try{s=localStorage.getItem('sixtysix.locale.v1')}catch(e){}
-  var n=(navigator.language||'en').slice(0,2);
-  var l=[q,h,s,n].filter(function(x){return L.indexOf(x)>-1})[0]||'en';
-  function show(l){
-    document.documentElement.lang=l;
-    L.forEach(function(k){
-      var e=document.getElementById(k);if(e)e.hidden=k!==l;
-      var a=document.querySelector('nav a[href="#'+k+'"]');if(a)a.className=k===l?'on':'';
-    });
-  }
-  document.addEventListener('DOMContentLoaded',function(){
-    show(l);
-    document.querySelectorAll('nav a').forEach(function(a){
-      a.addEventListener('click',function(ev){ev.preventDefault();show(a.getAttribute('href').slice(1))});
-    });
-  });
-})();
-</script>
-<title>66 · Church</title>
+<title>66 für eure Gemeinde · Bibelquiz für die ganze Gruppe</title>
+<meta name="description" content="66 ist ein gratis Bibelquiz für Jugendgruppen, Gemeindeabende und Hauskreise: Fragen auf dem Beamer, Antworten auf dem Handy. Ohne App, ohne Konto, ohne Werbung.">
+<meta property="og:title" content="66 für eure Gemeinde">
+<meta property="og:description" content="Ein Bibelquiz-Abend für eure ganze Gruppe: ein Beamer, ihre Handys, in zwei Minuten startklar.">
+<meta property="og:image" content="https://66.gracelabs.dev/church/img/board-reveal.jpg">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  @font-face { font-family: 'Cinzel'; font-weight: 700; font-display: swap; src: url(fonts/cinzel-latin-700-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Cinzel'; font-weight: 900; font-display: swap; src: url(fonts/cinzel-latin-900-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Cinzel Decorative'; font-weight: 900; font-display: swap; src: url(fonts/cinzel-decorative-latin-900-normal.woff2) format('woff2'); }
+
+  :root {
+    --paper: #fbf6ea; --parch: #f3e6c6; --card: #fffaf0; --ink: #33210f; --soft: #6b5434; --gold: #b0801f; --gold-hi: #e3b754;
+    --red: #8e2a1d; --line: #e0cfa6; --night: #1d0f06; --btnfg: #2a1704;
+    --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif; --display: 'Cinzel', Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.6 var(--serif); }
+  img { max-width: 100%; display: block; }
+  a { color: var(--red); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; }
+  h2 { font-size: clamp(24px, 3.4vw, 34px); font-weight: 900; text-align: center; }
+  h2 + .intro { text-align: center; color: var(--soft); max-width: 640px; margin: 10px auto 0; font-style: italic; }
+  section.band { padding: 64px 0; }
+  section.band.alt { background: var(--parch); }
+  q { quotes: '«' '»'; font-weight: 700; }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; background: rgb(29 15 6 / 0.94); backdrop-filter: blur(6px); }
+  .top .wrap { display: flex; align-items: center; gap: 16px; height: 56px; }
+  .top .logo { font: 900 26px 'Cinzel Decorative', serif; color: var(--gold-hi); text-decoration: none; }
+  .top nav { margin-left: auto; display: flex; gap: 4px; }
+  .top nav a { color: #efe2c8; text-decoration: none; font-size: 14px; padding: 6px 10px; border-radius: 99px; }
+  .top nav a.on { background: var(--gold-hi); color: var(--btnfg); font-weight: 700; }
+  .top .links { display: flex; gap: 18px; }
+  .top .links a { color: #efe2c8; text-decoration: none; font: 700 13px var(--display); letter-spacing: 0.06em; }
+  @media (max-width: 760px) { .top .links { display: none; } }
+
+  .btn { display: inline-block; padding: 14px 28px; border-radius: 99px; background: linear-gradient(#f0c766, #d9a43a); color: var(--btnfg);
+    font: 900 17px var(--display); letter-spacing: 0.03em; text-decoration: none; box-shadow: 0 3px 0 #9a6b16, 0 6px 16px rgb(0 0 0 / 0.25); }
+  .btn.ghost { background: transparent; color: #ffe7a3; box-shadow: inset 0 0 0 2px var(--gold-hi); }
+  .btn.small { padding: 9px 18px; font-size: 14px; box-shadow: 0 2px 0 #9a6b16; }
+
+  /* Hero */
+  .hero { position: relative; background: var(--night); color: #f5e8cc; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: url(/art/bg-crowning-landscape.webp) center / cover; opacity: 0.35; }
+  .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(29 15 6 / 0.95) 30%, rgb(29 15 6 / 0.55)); }
+  .hero .wrap { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1.15fr; gap: 40px; align-items: center; padding-top: 56px; padding-bottom: 64px; }
+  .hero h1 { font-size: clamp(32px, 4.6vw, 52px); font-weight: 900; color: #fff3cf; }
+  .hero .promise { font-size: 21px; font-style: italic; color: var(--gold-hi); margin: 14px 0 26px; }
+  .hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero .safe { margin-top: 18px; font-size: 15px; color: #cdb98f; }
+  .stage { position: relative; margin-right: 34px; }
+  .screen { border-radius: 10px; padding: 6px; background: #0d0804; box-shadow: 0 18px 50px rgb(0 0 0 / 0.55); }
+  .screen img { border-radius: 5px; }
+  .phone { position: absolute; right: -30px; bottom: -26px; width: 19%; border-radius: 18px; padding: 4px; background: #0d0804; box-shadow: 0 12px 30px rgb(0 0 0 / 0.6); }
+  .phone img { border-radius: 14px; }
+  @media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; } .stage { margin: 10px 26px 20px 0; } }
+
+  /* Proof points */
+  .proofs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 34px; }
+  .proof { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+  .proof .em { font-size: 30px; }
+  .proof h3 { font-size: 19px; font-weight: 900; color: var(--red); margin: 8px 0 6px; }
+  .proof p { margin: 0; font-size: 16.5px; }
+  @media (max-width: 760px) { .proofs { grid-template-columns: 1fr; } }
+
+  /* Videos */
+  .videos { display: grid; grid-template-columns: 2fr 1fr; gap: 22px; margin-top: 34px; align-items: start; }
+  .video video { width: 100%; border-radius: 10px; background: #000; display: block; }
+  .video .cap { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-top: 8px; font-size: 15px; }
+  .video .cap b { font-family: var(--display); }
+  .videos .side { display: grid; gap: 22px; }
+  @media (max-width: 760px) { .videos { grid-template-columns: 1fr; } }
+
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 34px; counter-reset: s; }
+  .step { counter-increment: s; }
+  .step img { border-radius: 8px; border: 4px solid #1b130c; aspect-ratio: 16 / 9; object-fit: cover; }
+  .step p { margin: 10px 0 0; font-size: 16px; line-height: 1.45; }
+  .step p::before { content: counter(s); font: 900 22px 'Cinzel Decorative', serif; color: var(--gold); margin-right: 8px; }
+  @media (max-width: 860px) { .steps { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .steps { grid-template-columns: 1fr; } }
+  .center { text-align: center; margin-top: 30px; }
+
+  /* Advent */
+  .advent { display: flex; gap: 22px; align-items: center; margin-top: 30px; padding: 22px 26px; border-radius: 14px; border: 2px solid var(--gold); background: #fff8e6; }
+  .advent .em { font-size: 44px; }
+  .advent h3 { font-size: 21px; font-weight: 900; }
+  .advent p { margin: 6px 0 0; }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .pills span { border: 1.5px solid var(--gold); border-radius: 99px; padding: 3px 12px; font-size: 15px; background: var(--card); }
+
+  /* Who it's for */
+  .who { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 34px; }
+  .who > div { display: grid; grid-template-columns: 44px 1fr; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .who .em { font-size: 28px; }
+  .who h3 { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
+  .who p { margin: 0; font-size: 16.5px; }
+  @media (max-width: 760px) { .who { grid-template-columns: 1fr; } }
+
+  /* Material */
+  .group-title { font: 900 20px var(--display); margin: 40px 0 6px; color: var(--red); }
+  .group-sub { margin: 0 0 16px; color: var(--soft); font-size: 16px; }
+  .mats { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; }
+  .mat { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .mat a.open { display: flex; flex-direction: column; text-decoration: none; color: inherit; }
+  .mat em a { color: var(--red); }
+  .mat .thumb { height: 170px; display: grid; place-items: center; background: #efe4c9; border-radius: 8px; overflow: hidden; }
+  .mat .thumb img { max-height: 160px; width: auto; box-shadow: 0 2px 8px rgb(60 35 10 / 0.25); }
+  .mat b { font-family: var(--display); font-size: 15.5px; margin-top: 10px; }
+  .mat span { font-size: 14px; color: var(--soft); line-height: 1.4; margin-top: 2px; flex: 1; }
+  .mat em { font-style: normal; font-size: 13.5px; font-weight: 700; color: var(--red); margin-top: 8px; }
+  .mat:hover { border-color: var(--gold); }
+  .zip { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 18px; padding: 16px 20px; border-radius: 12px; background: var(--night); color: #f5e8cc; }
+  .zip p { margin: 0; flex: 1; min-width: 220px; font-size: 16px; }
+
+  .texts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .text { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
+  .text h4 { margin: 0 0 8px; font: 900 15px var(--display); }
+  .text p { margin: 0 0 12px; font-size: 15.5px; white-space: pre-line; flex: 1; }
+  .text button { align-self: flex-start; font: 700 14px var(--serif); border: 1.5px solid var(--gold); background: transparent; border-radius: 99px; padding: 5px 14px; cursor: pointer; color: var(--ink); }
+  @media (max-width: 860px) { .texts { grid-template-columns: 1fr; } }
+
+  /* Games, trust, FAQ */
+  .games { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 34px; }
+  .game { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .game img { aspect-ratio: 900 / 502; object-fit: cover; }
+  .game div { padding: 14px 16px 16px; }
+  .game h3 { font-size: 17px; font-weight: 900; }
+  .game small { display: block; color: var(--soft); font-size: 13px; margin: 2px 0 6px; }
+  .game p { margin: 0; font-size: 15.5px; line-height: 1.45; }
+  @media (max-width: 760px) { .games { grid-template-columns: 1fr; } }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 34px; }
+  .two h3 { font-size: 20px; font-weight: 900; margin-bottom: 10px; }
+  .two ul { padding-left: 20px; margin: 0; } .two li { margin-bottom: 6px; font-size: 16.5px; }
+  .two p { font-size: 16.5px; }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; gap: 20px; } }
+  .faq { max-width: 780px; margin: 30px auto 0; }
+  .faq details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+  .faq summary { cursor: pointer; font-weight: 700; }
+  .faq details p { margin: 10px 0 0; font-size: 16.5px; }
+
+  /* Contact */
+  .contact { display: flex; gap: 26px; align-items: center; max-width: 820px; margin: 30px auto 0; padding: 26px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  .face { position: relative; width: 110px; height: 110px; flex: none; border-radius: 50%; overflow: hidden; border: 3px solid var(--gold); display: grid; place-items: center;
+    font: 900 34px var(--display); color: var(--gold); background: var(--paper); }
+  .face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .contact p { margin: 0 0 12px; }
+  @media (max-width: 600px) { .contact { flex-direction: column; text-align: center; } }
+
+  footer { background: var(--night); color: #cdb98f; text-align: center; padding: 30px 20px; font-size: 15px; }
+  footer .made { font: 700 14px var(--display); letter-spacing: 0.05em; color: #efe2c8; }
+  footer a { color: #e3b754; margin: 0 8px; }
+
+  /* Older, simpler language sections (EN, HU) */
+  .plain { max-width: 760px; margin: 0 auto; padding: 46px 20px 60px; }
+  .plain h1 { font-size: 34px; font-weight: 900; margin-bottom: 10px; }
+  .plain h2 { text-align: left; font-size: 22px; margin: 36px 0 8px; color: var(--red); }
+  .plain h3 { font-size: 17px; margin: 14px 0 4px; }
+  .plain .lead { font-size: 20px; line-height: 1.5; }
+  .plain .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 0 0 12px; }
+  .plain .card h3 { margin-top: 0; } .plain .card p:last-child { margin-bottom: 0; }
+  .plain .small { color: var(--soft); font-size: 15px; }
+</style>
+<script>
+(function () {
+  var L = ['de', 'en', 'hu'], q = (location.search.match(/[?&]lang=(\w+)/) || [])[1], s, h = location.hash.slice(1)
+  try { s = localStorage.getItem('sixtysix.locale.v1') } catch (e) {}
+  var n = (navigator.language || 'de').slice(0, 2)
+  var l = [q, h, s, n].filter(function (x) { return L.indexOf(x) > -1 })[0] || 'de'
+  function show(l) {
+    document.documentElement.lang = l
+    L.forEach(function (k) {
+      var e = document.getElementById(k); if (e) e.hidden = k !== l
+      var a = document.querySelector('.top nav a[href="#' + k + '"]'); if (a) a.className = k === l ? 'on' : ''
+    })
+    var links = document.querySelector('.top .links'); if (links) links.hidden = l !== 'de'
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    show(l)
+    document.querySelectorAll('.top nav a').forEach(function (a) {
+      a.addEventListener('click', function (ev) { ev.preventDefault(); show(a.getAttribute('href').slice(1)); scrollTo(0, 0) })
+    })
+    // Seasonal blocks show only inside their window ('MM-DD', wraps the new year).
+    var md = new Date().toISOString().slice(5, 10)
+    document.querySelectorAll('[data-season]').forEach(function (e) {
+      var r = e.getAttribute('data-season').split('/'), inside = r[0] <= r[1] ? md >= r[0] && md <= r[1] : md >= r[0] || md <= r[1]
+      if (!inside) e.hidden = true
+    })
+    document.querySelectorAll('[data-copy]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = b.parentNode.querySelector('p').innerText
+        navigator.clipboard.writeText(t).then(function () { var o = b.textContent; b.textContent = '✓ Kopiert'; setTimeout(function () { b.textContent = o }, 1600) })
+      })
+    })
+  })
+})()
+</script>
 </head>
 <body>
-<main>
-<nav><a href="#en">English</a><a href="#de">Deutsch</a><a href="#hu">Magyar</a></nav>
 
-<section id="en" lang="en">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="/">66</a>
+    <div class="links"><a href="#so-gehts">So geht’s</a><a href="#material">Material</a><a href="#fragen">Fragen</a><a href="#kontakt">Kontakt</a></div>
+    <nav><a href="#de">DE</a><a href="#en">EN</a><a href="#hu">HU</a></nav>
+  </div>
+</header>
+
+<!-- ============================ DEUTSCH ============================ -->
+<main id="de" lang="de">
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Ein Bibelquiz-Abend für eure ganze Gruppe</h1>
+      <p class="promise">Ein Beamer, ihre Handys, in zwei Minuten startklar.</p>
+      <div class="ctas">
+        <a class="btn" href="/">Jetzt ein Spiel hosten</a>
+        <a class="btn ghost" href="#material">Material herunterladen</a>
+      </div>
+      <p class="safe">Gratis · keine Werbung · kein Tracking · ohne App und ohne Konto</p>
+    </div>
+    <div class="stage">
+      <div class="screen"><img src="img/board-reveal.jpg" alt="Der Beamer nach einer Frage: die richtige Antwort, der Bibelvers und wie viele welche Antwort gewählt haben" width="1200" height="675"></div>
+      <div class="phone"><img src="img/phone-hand.jpg" alt="Das Handy eines Spielers mit den vier Antwortkarten" width="360" height="779"></div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Warum 66?</h2>
+    <div class="proofs">
+      <div class="proof"><div class="em">🙌</div><h3>Alle spielen mit</h3><p>Bis 200 Leute scannen den QR-Code und sind dabei, ohne App, ohne Konto. Jung und Alt am gleichen Spiel.</p></div>
+      <div class="proof"><div class="em">📖</div><h3>Es bleibt bei der Bibel</h3><p>5’500 geprüfte Fragen aus allen 66 Büchern, nach jeder Frage steht der Vers. Oder eigene Fragen zu eurem Thema.</p></div>
+      <div class="proof"><div class="em">🎁</div><h3>Ein Geschenk</h3><p>Gratis, keine Werbung, kein Tracking, nichts zu kaufen. Gemacht in der Schweiz.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Videos: remove `hidden` once the files are in /church/de/. -->
+<section class="band alt" id="videos" hidden>
+  <div class="wrap">
+    <h2>66 in Bewegung</h2>
+    <p class="intro">Schaut rein, und ladet die Videos herunter, um sie in eurer Gemeinde zu zeigen oder weiterzuschicken.</p>
+    <div class="videos">
+      <div class="video">
+        <video controls preload="none" poster="img/board-jericho.jpg" src="de/66-promo.mp4"></video>
+        <div class="cap"><b>66 in 60 Sekunden</b><a href="de/66-promo.mp4" download>Herunterladen</a></div>
+      </div>
+      <div class="side">
+        <div class="video">
+          <video controls preload="none" poster="img/board-lobby.jpg" src="de/66-anleitung.mp4"></video>
+          <div class="cap"><b>Spiel hosten in 2 Minuten</b><a href="de/66-anleitung.mp4" download>Herunterladen</a></div>
+        </div>
+        <div class="video">
+          <video controls preload="none" poster="img/phone-win.jpg" src="de/66-hochkant.mp4" style="max-height:340px;width:auto;margin:0 auto"></video>
+          <div class="cap"><b>Kurzclip hochkant</b><a href="de/66-hochkant.mp4" download>Herunterladen</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt" id="so-gehts">
+  <div class="wrap">
+    <h2>So läuft ein Spiel</h2>
+    <p class="intro">Ihr braucht einen Laptop am Beamer oder Fernseher, Internet und die Handys eurer Leute. Sonst nichts.</p>
+    <div class="steps">
+      <div class="step"><img src="img/board-lobby.jpg" alt="Die Lobby mit QR-Code und 28 Spielern" loading="lazy"><p>Am Laptop 66.gracelabs.dev öffnen, <q>Bibel-Blitz</q>, <q>Spiel hosten</q>. Alle scannen den QR-Code.</p></div>
+      <div class="step"><img src="img/board-question.jpg" alt="Eine Frage auf dem Beamer" loading="lazy"><p>Die Frage steht auf dem Beamer, geantwortet wird auf dem Handy. 20 Sekunden pro Frage.</p></div>
+      <div class="step"><img src="img/board-jericho.jpg" alt="Der Marsch um Jericho" loading="lazy"><p>Lösung und Bibelvers, dann der Marsch um Jericho. Am Schluss fallen die Mauern.</p></div>
+      <div class="step"><img src="img/board-crowning.jpg" alt="Die Krönung der besten drei" loading="lazy"><p>Die besten drei werden gekrönt. Nochmal? Alle bleiben drin.</p></div>
+    </div>
+    <div class="advent" data-season="11-01/01-06">
+      <div class="em">🕯️</div>
+      <div>
+        <h3>Für Advent bereit</h3>
+        <p>Bis 6. Januar gibt es drei fertige Fragen-Sets mit je 15 Fragen, direkt unter <q>Spiel hosten</q>:</p>
+        <div class="pills"><span>Advent: Die Verheissung</span><span>Weihnachten: Die Heilige Nacht</span><span>Weihnachten: Für Profis</span></div>
+      </div>
+    </div>
+    <div class="center"><a class="btn" href="/">Jetzt ausprobieren</a></div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Wofür es passt</h2>
+    <div class="who">
+      <div><span class="em">🔥</span><div><h3>Jugendgruppe, Teenie-Treff</h3><p><q>Klassisch</q>: jeder gegen jeden, schwere Fragen, ein Sieger mit Krone.</p></div></div>
+      <div><span class="em">🪨</span><div><h3>Gemeinde- und Familienabend</h3><p><q>David gegen Goliat</q>: der ganze Raum gegen einen Riesen. Jede richtige Antwort ist ein Stein aus der Schleuder. Niemand verliert allein.</p></div></div>
+      <div><span class="em">🧱</span><div><h3>Jungschar, Cevi, Lager</h3><p><q>Die Mauer bauen</q>: Teams bauen um die Wette ihr Tor von Jerusalem wieder auf (Nehemia 3). Mit <q>Leicht</q> auch für Jüngere.</p></div></div>
+      <div><span class="em">🐺</span><div><h3>Hauskreis, Kleingruppe</h3><p>Partyspiele wie <q>Wolf in der Herde</q>, auch ohne Beamer: Ein Handy reicht, es wird herumgereicht.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt" id="material">
+  <div class="wrap">
+    <h2>Material zum Herunterladen</h2>
+    <p class="intro">Alles gratis. Druckt es selbst aus (A4, Plakat auch in A3) und gebt es gern weiter.</p>
+
+    <div class="group-title">Für euren Spielabend</div>
+    <p class="group-sub">Was ihr braucht, um einen Abend vorzubereiten und anzukündigen.</p>
+    <div class="mats">
+      <div class="mat"><a class="open" href="de/spielleitung.pdf" download><div class="thumb"><img src="de/preview/spielleitung.jpg" alt="" loading="lazy"></div><b>Anleitung für die Spielleitung</b></a><span>2 Seiten: was ihr braucht, Schritt für Schritt, ein Ablauf für 45 Minuten, welcher Modus für wen, was tun, wenn’s harzt.</span><em><a href="de/spielleitung.pdf" download>PDF · A4</a></em></div>
+      <div class="mat"><a class="open" href="de/plakat-a4.pdf" download><div class="thumb"><img src="de/preview/plakat-a4.jpg" alt="" loading="lazy"></div><b>Plakat</b></a><span>Bibelquiz-Abend, mit Feld für Datum und Ort zum Ausfüllen.</span><em><a href="de/plakat-a4.pdf" download>PDF · A4 / A3</a></em></div>
+      <div class="mat"><a class="open" href="de/folie.png" download><div class="thumb"><img src="de/preview/folie.jpg" alt="" loading="lazy"></div><b>Folie für den Beamer</b></a><span>«Gleich geht’s los!», bevor das Spiel startet.</span><em><a href="de/folie.png" download>PNG · 1920×1080</a></em></div>
+      <div class="mat"><a class="open" href="de/flyer-a4-2x.pdf" download><div class="thumb"><img src="de/preview/flyer-a5.jpg" alt="" loading="lazy"></div><b>Flyer zum Mitnehmen</b></a><span>«Spiel weiter»: so geht’s zuhause weiter. Zwei Flyer pro A4-Blatt.</span><em><a href="de/flyer-a4-2x.pdf" download>PDF · 2 × A5</a> · <a href="de/flyer-a5.pdf" download>einzeln A5</a></em></div>
+    </div>
+    <div class="zip">
+      <p><b>Alles auf einmal:</b> Anleitung, Plakat, Folie, Flyer und die Texte zum Ankündigen.</p>
+      <a class="btn small" href="de/66-material-de.zip" download>ZIP herunterladen (8 MB)</a>
+    </div>
+
+    <div class="group-title">Texte zum Ankündigen</div>
+    <p class="group-sub">Kopieren, Datum und Ort einsetzen, fertig.</p>
+    <div class="texts">
+      <div class="text"><h4>Gemeindeblatt / Website</h4><p>Bibelquiz-Abend: Wer erobert Jericho?
+Am [Datum] um [Zeit] spielen wir im [Ort] 66, ein Bibelquiz für alle. Die Fragen stehen auf dem Beamer, geantwortet wird mit dem Handy: QR-Code scannen, Namen eingeben, los geht’s. Ohne App, ohne Konto. Nach jeder Frage lesen wir den Bibelvers dazu. Jung und Alt sind herzlich willkommen. Bring dein Handy mit!</p><button data-copy>Kopieren</button></div>
+      <div class="text"><h4>WhatsApp / Signal</h4><p>Am [Datum] spielen wir 66, ein Bibelquiz für alle 📖
+Bring dein Handy mit: QR-Code scannen, Namen eingeben, los geht’s. Wer erobert Jericho? 🏰
+[Zeit], [Ort]</p><button data-copy>Kopieren</button></div>
+      <div class="text"><h4>Ansage im Gottesdienst</h4><p>Am [Datum] laden wir alle zu einem Bibelquiz-Abend ein. Ihr braucht nur euer Handy: Die Fragen kommen auf den Beamer, ihr antwortet auf dem Handy, und nach jeder Frage lesen wir den Vers dazu. Für Jung und Alt. [Zeit], [Ort].</p><button data-copy>Kopieren</button></div>
+    </div>
+
+    <div class="group-title">Zum Weitergeben</div>
+    <p class="group-sub">Für Leitungsteams, Kolleginnen und Kollegen in anderen Gemeinden.</p>
+    <div class="mats">
+      <div class="mat"><a class="open" href="de/66-fuer-gemeinden.pdf" download><div class="thumb"><img src="de/preview/66-fuer-gemeinden.jpg" alt="" loading="lazy"></div><b>66 für eure Gemeinde</b></a><span>2 Seiten Überblick mit Bildern und den häufigsten Fragen.</span><em><a href="de/66-fuer-gemeinden.pdf" download>PDF · A4</a></em></div>
+      <div class="mat"><a class="open" href="de/flyer-leiter-a4-2x.pdf" download><div class="thumb"><img src="de/preview/flyer-leiter-a5.jpg" alt="" loading="lazy"></div><b>Flyer für Leiterinnen und Leiter</b></a><span>Für Leitertreffen und Konferenzen. Zwei pro A4-Blatt.</span><em><a href="de/flyer-leiter-a4-2x.pdf" download>PDF · 2 × A5</a> · <a href="de/flyer-leiter-a5.pdf" download>einzeln A5</a></em></div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Mehr als ein Quiz</h2>
+    <p class="intro">Partyspiele für kleinere Runden, und für zwischen den Treffen etwas für jeden allein.</p>
+    <div class="games">
+      <div class="game"><img src="/art/banner-flock.webp" alt="" loading="lazy"><div><h3>Wolf in der Herde</h3><small>3–12 Spieler · etwa 5 Minuten · ein Handy oder jeder seins</small><p>Alle kennen das geheime Bibelwort, nur der Wolf nicht. Gebt kurze Hinweise und entlarvt ihn.</p></div></div>
+      <div class="game"><img src="/art/banner-spies.webp" alt="" loading="lazy"><div><h3>Kundschafter</h3><small>2–12 Spieler · etwa 20 Minuten</small><p>Zwei Stämme finden ihre Wörter mit Ein-Wort-Hinweisen ihres Anführers. Gut für eine grössere Jugendgruppe.</p></div></div>
+      <div class="game"><img src="/art/banner-mission.webp" alt="" loading="lazy"><div><h3>Königreiche</h3><small>2–3 Spieler · 15–25 Minuten</small><p>Erobert das Land auf der Karte. Jede Eroberung wird mit einer Bibelfrage entschieden.</p></div></div>
+      <div class="game"><img src="/art/banner-daily.webp" alt="" loading="lazy"><div><h3>Tagesrolle</h3><small>allein · 2 Minuten am Tag</small><p>Fünf Fragen, jeden Tag neu und für alle gleich. So bleibt die Gruppe auch unter der Woche dran.</p></div></div>
+      <div class="game"><img src="/art/banner-exodus.webp" alt="" loading="lazy"><div><h3>Exodus</h3><small>allein · 3D</small><p>Lauf durch die Exodus-Geschichte und durchs Rote Meer. Wer das richtige Antwort-Tor nimmt, kommt weiter.</p></div></div>
+      <div class="game"><img src="/art/banner-practice.webp" alt="" loading="lazy"><div><h3>Üben</h3><small>allein · in deinem Tempo</small><p>Ohne Zeitdruck lernen, die eigenen Fehler wiederholen oder gegen die Bots antreten.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt">
+  <div class="wrap">
+    <h2>Kann man 66 trauen?</h2>
+    <div class="two">
+      <div>
+        <h3>Die Fragen</h3>
+        <p>Es gibt etwa 5’500 Fragen zu allen 66 Büchern der Bibel. Sie wurden sorgfältig erstellt, und jede wurde am Bibeltext geprüft. Daniels Familie hat sie wochenlang getestet. Wir können nicht versprechen, dass kein Fehler mehr drin ist. Darum kann jede und jeder im Spiel eine Frage melden. Gemeldete Fragen werden geprüft und korrigiert oder entfernt.</p>
+        <p>Die Fragen fragen, was im Text steht. Sie vertreten keine Konfession und keine bestimmte Auslegung.</p>
+        <p style="font-size:14px;color:var(--soft)">Bibeltexte: Schlachter 1951 (CC BY 4.0), World English Bible (gemeinfrei), Biblica Nyitott Újszövetség (CC BY-SA 4.0) und Károli 1908.</p>
+      </div>
+      <div>
+        <h3>Sicher für junge Leute</h3>
+        <ul>
+          <li>Keine Werbung und kein Tracking. Keine Cookies, keine Statistik.</li>
+          <li>Kein Konto nötig. Niemand muss eine E-Mail-Adresse angeben.</li>
+          <li>Kein Chat zwischen den Spielern. Bei <q>Wolf in der Herde</q> tippen die Spieler einen kurzen Hinweis mit höchstens drei Wörtern.</li>
+          <li>Man tritt mit einem Spitznamen bei. Grobe Spitznamen werden blockiert, und die Spielleitung kann Spieler entfernen.</li>
+          <li>Die Daten eines Spiels liegen nur im Arbeitsspeicher und sind spätestens zwei Stunden nach Spielende weg.</li>
+          <li>Details in der <a href="/privacy/#de">Datenschutzerklärung</a>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="fragen">
+  <div class="wrap">
+    <h2>Häufige Fragen</h2>
+    <div class="faq">
+      <details><summary>Was kostet es? Wo ist der Haken?</summary><p>Es kostet nichts, und es gibt keinen Haken. 66 ist ein Geschenk von Grace Labs, einem kleinen Team in der Schweiz. Keine Werbung, keine Premium-Version, wir verkaufen keine Daten. Wer später etwas beitragen möchte, kann das im Spiel tun. Niemand muss.</p></details>
+      <details><summary>Was brauchen wir?</summary><p>Einen Laptop oder ein Tablet am Beamer oder Fernseher, Internet, und die Handys der Spieler. Ton über Lautsprecher macht viel aus. Keine App, kein Konto, keine Anmeldung.</p></details>
+      <details><summary>Wie viele können mitspielen?</summary><p>Bis 200 in einem Spiel. Wer kein Handy hat, spielt zu zweit.</p></details>
+      <details><summary>Wie lange dauert ein Spiel?</summary><p>Pro Frage etwa eine halbe Minute: 10 Fragen dauern rund 6 Minuten, 15 Fragen rund 10. Ein ganzer Abend mit drei Runden und einer Pause passt in 45 Minuten.</p></details>
+      <details><summary>Ist es auch für Kinder?</summary><p>Mit der Stufe <q>Leicht</q> ja. <q>Schwer</q> fordert auch Bibelkenner heraus.</p></details>
+      <details><summary>Welche Bibelübersetzung?</summary><p>Deutsch nach Schlachter 1951, Englisch nach der World English Bible. Gespielt wird auf Deutsch, Englisch oder Ungarisch, jeder in seiner Sprache, auch gemischt im gleichen Spiel.</p></details>
+      <details><summary>Können wir eigene Fragen machen?</summary><p>Ja. Meldet euch in 66 an (Profil), dann bei <q>Spiel hosten</q> ein eigenes Deck mit 3 bis 50 Fragen erstellen, etwa zur Predigtreihe oder fürs Lager. Oder wählt unter <q>Weitere Optionen</q> nur die Bücher, die ihr gerade lest.</p></details>
+      <details><summary>Geht es ohne Internet?</summary><p>Nein. Der Laptop und die Handys brauchen Internet. Mobile Daten reichen, wenn das WLAN schwach ist.</p></details>
+      <details><summary>Gibt es 66 auf Französisch oder Italienisch?</summary><p>Noch nicht. Im Moment gibt es Deutsch, Englisch und Ungarisch.</p></details>
+      <details><summary>Muss man etwas installieren?</summary><p>Nein. 66 läuft im Browser, auf jedem Handy, Tablet und Laptop.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="band alt" id="kontakt">
+  <div class="wrap">
+    <h2>Wer steckt dahinter?</h2>
+    <div class="contact">
+      <div class="face">DG<img src="img/daniel.jpg" alt="Daniel Gergely" onerror="this.remove()"></div>
+      <div>
+        <p>Ich bin Daniel Gergely. Mit <a href="https://gracelabs.dev">Grace Labs</a>, einem kleinen Team in der Schweiz, haben wir 66 für Gemeinden gebaut.</p>
+        <p>Ich helfe gern beim ersten Spielabend: per Telefon oder, wenn ihr in der Nähe seid, vor Ort. Und ich freue mich über jede Rückmeldung.</p>
+        <a class="btn small" href="mailto:hello@gracelabs.dev?subject=66%20f%C3%BCr%20unsere%20Gemeinde">hello@gracelabs.dev</a>
+      </div>
+    </div>
+    <div class="center"><a class="btn" href="/">Jetzt ein Spiel hosten</a></div>
+  </div>
+</section>
+
+<footer>
+  <div class="made">66 · entwickelt mit ❤️ von Grace Labs in 🇨🇭</div>
+  <p><a href="/">Zum Spiel</a><a href="/privacy/#de">Datenschutz</a><a href="https://gracelabs.dev/de/imprint/">Impressum</a></p>
+</footer>
+</main>
+
+<!-- ============================ ENGLISH (full page with the EN wave) ============================ -->
+<main id="en" lang="en" hidden>
+<div class="plain">
 <h1>66 for your church / youth group</h1>
 <p class="lead">66 is a free Bible quiz game. Your group plays together on their phones, and you only need a laptop and a screen.</p>
 <p><a class="btn" href="/">Play now</a></p>
@@ -64,46 +435,24 @@
 <ol>
 <li><b>Show it.</b> Open 66 on a laptop connected to a projector or TV. Go to Together, open Bible Blitz and choose "Host a game".</li>
 <li><b>Join.</b> Everyone scans the QR code with their phone and picks a nickname. Nothing to download. If someone should not be in the game, you can remove them.</li>
-<li><b>Play.</b> Choose the mode (Classic, David vs Goliath or Rebuild the Wall), 5 to 20 questions, the difficulty and the Bible books. A game of 10 questions takes about 10 minutes.</li>
+<li><b>Play.</b> Choose the mode (Classic, David vs Goliath or Rebuild the Wall), 5 to 20 questions, the difficulty and the Bible books. A game of 10 questions takes about 6 minutes.</li>
 </ol>
-<!-- VIDEO: Bible Blitz, hosting a game on the projector and joining by QR code (30-60 s) -->
 
 <h2>What is inside</h2>
 <h3>Together</h3>
-<div class="card">
-<h3>Bible Blitz</h3>
-<p>The live group quiz for the whole room. Questions on the big screen, answers on the phones, scores after every question.</p>
-<!-- VIDEO: Bible Blitz gameplay, one question round with the leaderboard -->
-</div>
-<div class="card">
-<h3>Wolf in the Flock</h3>
-<p>3 to 12 players, about 5 minutes. Everyone knows the secret word except the wolf. Give short clues, find the wolf. One phone in a room or online, each on their own phone.</p>
-<!-- VIDEO: Wolf in the Flock, clues, vote and reveal -->
-</div>
-<div class="card">
-<h3>Spies</h3>
-<p>2 to 12 players, about 20 minutes. Two teams, secret roles and clues. Good for a bigger youth group.</p>
-<!-- VIDEO: Spies, a round on phones and the shared screen -->
-</div>
-<div class="card">
-<h3>Kingdoms</h3>
-<p>2 or 3 players, 15 to 25 minutes. Claim land on the map. Every claim is decided by a Bible question.</p>
-<!-- VIDEO: Kingdoms, claiming and defending a region -->
-</div>
+<div class="card"><h3>Bible Blitz</h3><p>The live group quiz for the whole room. Questions on the big screen, answers on the phones, scores after every question.</p></div>
+<div class="card"><h3>Wolf in the Flock</h3><p>3 to 12 players, about 5 minutes. Everyone knows the secret word except the wolf. Give short clues, find the wolf. One phone in a room or online, each on their own phone.</p></div>
+<div class="card"><h3>Spies</h3><p>2 to 12 players, about 20 minutes. Two teams, secret roles and clues. Good for a bigger youth group.</p></div>
+<div class="card"><h3>Kingdoms</h3><p>2 or 3 players, 15 to 25 minutes. Claim land on the map. Every claim is decided by a Bible question.</p></div>
 <h3>Solo</h3>
-<div class="card">
-<p><b>Daily Scroll</b> is a short daily quiz. <b>Practice</b> trains at your own pace, and you can race the bots. <b>Exodus</b> is a 3D runner: run through the Exodus story and answer questions to keep going. Good for the days between your meetings.</p>
-<!-- VIDEO: Exodus, a short run with a question gate -->
-</div>
+<div class="card"><p><b>Daily Scroll</b> is a short daily quiz. <b>Practice</b> trains at your own pace, and you can race the bots. <b>Exodus</b> is a 3D runner: run through the Exodus story and answer questions to keep going. Good for the days between your meetings.</p></div>
 <h3>Jerusalem</h3>
-<div class="card">
-<p>With an optional account, every player builds a home in a shared city. Quizzes earn what they need to build. Nobody has to, and the group games work without it.</p>
-</div>
+<div class="card"><p>With an optional account, every player builds a home in a shared city. Quizzes earn what they need to build. Nobody has to, and the group games work without it.</p></div>
 
 <h2>Can we trust the questions?</h2>
 <p>There are about 5,500 questions across all 66 books of the Bible. They were generated with care, then each one was checked against the Bible text. Daniel's family tested them for weeks. We cannot promise there is no mistake left, so anyone can flag a question inside the game. Flagged questions are reviewed and fixed or removed.</p>
 <p>The questions ask what the text says. They do not push a denomination or a particular interpretation.</p>
-<p>Bible texts: World English Bible (public domain), Schlachter 1951 (CC BY 4.0), Biblica Nyitott Újszövetség (CC BY-SA 4.0) and Károli 1908.</p>
+<p class="small">Bible texts: World English Bible (public domain), Schlachter 1951 (CC BY 4.0), Biblica Nyitott Újszövetség (CC BY-SA 4.0) and Károli 1908.</p>
 
 <h2>Safe for young people</h2>
 <ul>
@@ -115,84 +464,19 @@
 <li>66 runs on Cloudflare. Details are on the <a href="/privacy/">privacy page</a>.</li>
 </ul>
 
-<h2>Free, and how to help</h2>
-<p>66 is free and stays free. If it is useful for your group, you can support it. 50% of what comes in goes to Compassion, a child sponsorship charity. The other 50% pay for hosting and development. <a href="/support/">How to support 66</a></p>
+<h2>Why is it free?</h2>
+<p>66 is a gift from Grace Labs, a small team in Switzerland. There are no ads, no premium version and we don't sell data. If people want to support it later, they can, from inside the game. Nobody has to.</p>
 
 <h2>Contact</h2>
 <p>Questions, ideas, a school or church that wants to try it together? Write to <a href="mailto:hello@gracelabs.dev">hello@gracelabs.dev</a>. 66 is made by Daniel Gergely, <a href="https://gracelabs.dev">Grace Labs</a>.</p>
 <p><a class="btn" href="/">Play now</a></p>
-</section>
-
-<section id="de" lang="de">
-<h1>66 für deine Gemeinde / Jugendgruppe</h1>
-<p class="lead">66 ist ein kostenloses Bibelquiz. Eure Gruppe spielt zusammen auf den Handys, und du brauchst nur einen Laptop und einen Bildschirm.</p>
-<p><a class="btn" href="/">Jetzt spielen</a></p>
-<p class="small">Gratis, keine Werbung, kein Konto nötig. Läuft in jedem Browser. Deutsch, Englisch und Ungarisch.</p>
-
-<h2>Ein Spieleabend in 3 Schritten</h2>
-<ol>
-<li><b>Zeigen.</b> Öffne 66 auf einem Laptop, der an einen Beamer oder Fernseher angeschlossen ist. Geh zu «Zusammen», öffne den Bibel-Blitz und wähle «Spiel starten».</li>
-<li><b>Beitreten.</b> Alle scannen den QR-Code mit dem Handy und wählen einen Spitznamen. Nichts zum Herunterladen. Wenn jemand nicht mitspielen soll, kannst du ihn entfernen.</li>
-<li><b>Spielen.</b> Wähle den Modus (Klassisch, David gegen Goliat oder Mauerbau), 5 bis 20 Fragen, den Schwierigkeitsgrad und die Bibelbücher. Ein Spiel mit 10 Fragen dauert etwa 10 Minuten.</li>
-</ol>
-<!-- VIDEO: Bibel-Blitz, Spiel am Beamer starten und per QR-Code beitreten (30-60 s) -->
-
-<h2>Was drin ist</h2>
-<h3>Zusammen</h3>
-<div class="card">
-<h3>Bibel-Blitz</h3>
-<p>Das Live-Gruppenquiz für den ganzen Raum. Fragen auf dem grossen Bildschirm, Antworten auf den Handys, Punkte nach jeder Frage.</p>
-<!-- VIDEO: Bibel-Blitz, eine Fragerunde mit Rangliste -->
 </div>
-<div class="card">
-<h3>Wolf in der Herde</h3>
-<p>3 bis 12 Spieler, etwa 5 Minuten. Alle kennen das geheime Wort, nur der Wolf nicht. Gebt kurze Hinweise und findet den Wolf. Mit einem Handy im Raum oder online, jeder mit seinem eigenen.</p>
-<!-- VIDEO: Wolf in der Herde, Hinweise, Abstimmung und Auflösung -->
-</div>
-<div class="card">
-<h3>Kundschafter</h3>
-<p>2 bis 12 Spieler, etwa 20 Minuten. Zwei Teams, geheime Rollen und Hinweise. Gut für eine grössere Jugendgruppe.</p>
-<!-- VIDEO: Kundschafter, eine Runde auf den Handys und dem gemeinsamen Bildschirm -->
-</div>
-<div class="card">
-<h3>Königreiche</h3>
-<p>2 oder 3 Spieler, 15 bis 25 Minuten. Erobert Land auf der Karte. Jede Eroberung wird mit einer Bibelfrage entschieden.</p>
-<!-- VIDEO: Königreiche, eine Region erobern und verteidigen -->
-</div>
-<h3>Allein</h3>
-<div class="card">
-<p>Die <b>Tagesrolle</b> ist ein kurzes Quiz pro Tag. Beim <b>Üben</b> trainierst du in deinem Tempo und kannst gegen die Bots antreten. <b>Exodus</b> ist ein 3D-Läufer: Lauf durch die Exodus-Geschichte und beantworte Fragen, um weiterzukommen. Gut für die Tage zwischen euren Treffen.</p>
-<!-- VIDEO: Exodus, ein kurzer Lauf mit Fragentor -->
-</div>
-<h3>Jerusalem</h3>
-<div class="card">
-<p>Mit einem freiwilligen Konto baut jeder ein Zuhause in einer gemeinsamen Stadt. Quiz bringt das, was man zum Bauen braucht. Niemand muss, und die Gruppenspiele gehen auch ohne.</p>
-</div>
+<footer><div class="made">66 · made with ❤️ by Grace Labs in 🇨🇭</div><p><a href="/">Play</a><a href="/privacy/">Privacy</a><a href="https://gracelabs.dev/en/imprint/">Imprint</a></p></footer>
+</main>
 
-<h2>Kann man den Fragen trauen?</h2>
-<p>Es gibt etwa 5500 Fragen zu allen 66 Büchern der Bibel. Sie wurden sorgfältig erstellt, und jede wurde am Bibeltext geprüft. Daniels Familie hat sie wochenlang getestet. Wir können nicht versprechen, dass kein Fehler mehr drin ist. Darum kann jede und jeder im Spiel eine Frage melden. Gemeldete Fragen werden geprüft und korrigiert oder entfernt.</p>
-<p>Die Fragen fragen, was im Text steht. Sie vertreten keine Konfession und keine bestimmte Auslegung.</p>
-<p>Bibeltexte: World English Bible (gemeinfrei), Schlachter 1951 (CC BY 4.0), Biblica Nyitott Újszövetség (CC BY-SA 4.0) und Károli 1908.</p>
-
-<h2>Sicher für junge Leute</h2>
-<ul>
-<li>Keine Werbung und kein Tracking. Keine Cookies, keine Statistik.</li>
-<li>Kein Konto nötig. Niemand muss eine E-Mail-Adresse angeben.</li>
-<li>Kein Chat zwischen den Spielern. Bei «Wolf in der Herde» tippen die Spieler einen kurzen Hinweis mit höchstens drei Wörtern, den die Gruppe sieht.</li>
-<li>Die Spieler treten mit einem Spitznamen bei. Grobe Spitznamen werden blockiert, und du als Spielleitung kannst Spieler entfernen.</li>
-<li>Die Daten eines Online-Spiels liegen nur im Arbeitsspeicher und sind spätestens zwei Stunden nach Spielende weg.</li>
-<li>66 läuft bei Cloudflare. Details stehen in der <a href="/privacy/#de">Datenschutzerklärung</a>.</li>
-</ul>
-
-<h2>Gratis, und wie du helfen kannst</h2>
-<p>66 ist gratis und bleibt gratis. Wenn es für deine Gruppe nützlich ist, kannst du es unterstützen. 50% von dem, was hereinkommt, gehen an Compassion, ein Kinderpatenschafts-Hilfswerk. Die anderen 50% bezahlen Hosting und Entwicklung. <a href="/support/#de">So kannst du 66 unterstützen</a></p>
-
-<h2>Kontakt</h2>
-<p>Fragen, Ideen, eine Schule oder Gemeinde, die es gemeinsam ausprobieren möchte? Schreib an <a href="mailto:hello@gracelabs.dev">hello@gracelabs.dev</a>. 66 wird von Daniel Gergely, <a href="https://gracelabs.dev">Grace Labs</a>, entwickelt.</p>
-<p><a class="btn" href="/">Jetzt spielen</a></p>
-</section>
-
-<section id="hu" lang="hu">
+<!-- ============================ MAGYAR ============================ -->
+<main id="hu" lang="hu" hidden>
+<div class="plain">
 <h1>66 a gyülekezetednek / ifjúsági csoportodnak</h1>
 <p class="lead">A 66 ingyenes bibliakvíz. A csoportod együtt játszik a telefonján, neked csak egy laptop és egy képernyő kell.</p>
 <p><a class="btn" href="/">Játssz most</a></p>
@@ -204,34 +488,28 @@
 <li><b>Csatlakozzatok.</b> Mindenki a telefonjával beolvassa a QR-kódot, és választ egy becenevet. Nem kell letölteni semmit. Ha valakinek nem kellene a játékban lennie, kidobhatod.</li>
 <li><b>Játsszatok.</b> Válaszd ki a módot (Klasszikus, Dávid és Góliát vagy Falépítés), 5–20 kérdést, a nehézséget és a bibliai könyveket. Egy 10 kérdéses játék kb. 10 percig tart.</li>
 </ol>
-<!-- VIDEO: Bibliavillám, játék indítása a kivetítőn és csatlakozás QR-kóddal (30-60 mp) -->
 
 <h2>Mi van benne</h2>
 <h3>Együtt</h3>
 <div class="card">
 <h3>Bibliavillám</h3>
 <p>Az élő csoportos kvíz az egész teremnek. A kérdések a nagy képernyőn, a válaszok a telefonokon, minden kérdés után pontok.</p>
-<!-- VIDEO: Bibliavillám, egy kérdéskör ranglistával -->
 </div>
 <div class="card">
 <h3>Farkas a nyájban</h3>
 <p>3–12 játékos, kb. 5 perc. Mindenki ismeri a titkos szót, kivéve a farkast. Adjatok rövid célzásokat, és találjátok meg a farkast. Egy telefonnal egy szobában, vagy online, mindenki a sajátján.</p>
-<!-- VIDEO: Farkas a nyájban, célzások, szavazás és leleplezés -->
 </div>
 <div class="card">
 <h3>Kémek</h3>
 <p>2–12 játékos, kb. 20 perc. Két csapat, titkos szerepek és célzások. Jó egy nagyobb ifjúsági csoportnak.</p>
-<!-- VIDEO: Kémek, egy forduló a telefonokon és a közös képernyőn -->
 </div>
 <div class="card">
 <h3>Királyságok</h3>
 <p>2–3 játékos, 15–25 perc. Foglaljatok földet a térképen. Minden foglalást egy bibliai kérdés dönt el.</p>
-<!-- VIDEO: Királyságok, egy terület elfoglalása és megvédése -->
 </div>
 <h3>Egyedül</h3>
 <div class="card">
 <p>A <b>Napi tekercs</b> egy rövid napi kvíz. A <b>Gyakorlás</b> a saját tempódban megy, és a botok ellen is versenyezhetsz. Az <b>Exodus</b> egy 3D futójáték: futsz végig a kivonulás történetén, és kérdésekre válaszolva haladsz tovább. Jó az alkalmak közötti napokra.</p>
-<!-- VIDEO: Exodus, egy rövid futás kérdéskapuval -->
 </div>
 <h3>Jeruzsálem</h3>
 <div class="card">
@@ -253,15 +531,14 @@
 <li>A 66 a Cloudflare-en fut. A részleteket az <a href="/privacy/#hu">adatvédelmi oldalon</a> találod.</li>
 </ul>
 
-<h2>Ingyenes, és hogyan segíthetsz</h2>
-<p>A 66 ingyenes, és az is marad. Ha hasznos a csoportodnak, támogathatod. Ami beérkezik, annak 50%-a a Compassionhoz megy, a gyermekpatronálással foglalkozó segélyszervezethez. A másik 50% a tárhelyet és a fejlesztést fedezi. <a href="/support/#hu">Így támogathatod a 66-ot</a></p>
+<h2>Miért ingyenes?</h2>
+<p>A 66 a Grace Labs ajándéka, egy kis svájci csapaté. Nincs reklám, nincs prémium változat, és nem adunk el adatokat. Aki később támogatni szeretné, a játékon belül megteheti. Senkinek sem kötelező.</p>
 
 <h2>Kapcsolat</h2>
 <p>Kérdés, ötlet, vagy egy iskola vagy gyülekezet, amelyik együtt kipróbálná? Írj a <a href="mailto:hello@gracelabs.dev">hello@gracelabs.dev</a> címre. A 66-ot Gergely Dániel készíti, <a href="https://gracelabs.dev">Grace Labs</a>.</p>
 <p><a class="btn" href="/">Játssz most</a></p>
-</section>
-
-<a class="back" href="/">← 66</a>
+</div>
+<footer><div class="made">66 · ❤️-vel fejlesztette a Grace Labs 🇨🇭</div><p><a href="/">Játék</a><a href="/privacy/#hu">Adatvédelem</a><a href="https://gracelabs.dev/hu/imprint/">Impresszum</a></p></footer>
 </main>
 </body>
 </html>
