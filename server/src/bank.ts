@@ -36,6 +36,7 @@ let outOfPlay = new Set<string>()
 export function setOutOfPlay(ids: Iterable<string>): void {
   outOfPlay = new Set(ids)
 }
+export const inPlay = (id: string): boolean => !outOfPlay.has(id)
 
 /** The question's verse in every other language there is one for. */
 export function versesFor(id: string): Partial<Record<Locale, VerseText>> {

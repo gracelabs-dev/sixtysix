@@ -2,6 +2,10 @@
 export default {
   bible: '📖 Biblia',
   own: '🗂️ Pakli…',
+  featured: 'Most aktuális',
+  source: 'Kérdések',
+  withVerses: '📖 igeversekkel',
+  seasons: { christmas: '🎄 Advent és karácsony' },
   allQuestions: 'A pakli összes kérdése ({n}), véletlen sorrendben.',
   title: 'Kérdéspaklik',
   mine: 'Paklijaim',

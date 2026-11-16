@@ -3,7 +3,8 @@ import { AnimatePresence } from 'motion/react'
 import { useArenaStore } from '../../arena/arenaStore'
 import { playSfx } from '../../game/sfx'
 import { AnimatedNumber, useFirstKeys } from '../../motion'
-import { useT } from '../../i18n'
+import { useLocale, useT } from '../../i18n'
+import { deckLabel } from '../../decks/deckLabel'
 import { InfoButton } from '../../tutorial/InfoButton'
 import { useIntro } from '../../tutorial/useIntro'
 import { rich } from './rich'
@@ -44,6 +45,7 @@ function OptionsSheet({ initial, onClose }: { initial: RoomConfig; onClose: () =
 
 export function ArenaHostLobbyScreen() {
   const t = useT()
+  const locale = useLocale((s) => s.locale)
   const role = useArenaStore((s) => s.role)
   const room = useArenaStore((s) => s.room)
   const leaveArena = useArenaStore((s) => s.leaveArena)
@@ -113,7 +115,7 @@ export function ArenaHostLobbyScreen() {
           <span className="chip chip-mode">{t(`arena.modes.${room.config.mode ?? 'classic'}.label`)}</span>
           <span className="chip">{t('arena.hostLobby.questions', { n: room.config.questionCount })}</span>
           {room.config.deckId ? (
-            <span className="chip">🗂️ {room.config.deckTitle}</span>
+            <span className="chip">{deckLabel(room.config, locale)}</span>
           ) : (
             <>
               <span className="chip">{t(`arena.difficulty.${room.config.difficulty ?? 'mixed'}`)}</span>

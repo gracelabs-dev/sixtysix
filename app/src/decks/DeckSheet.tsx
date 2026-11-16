@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { DECK_ANSWER_MAX, DECK_MAX_QUESTIONS, DECK_TEXT_MAX, DECK_TITLE_MAX, type DeckQuestion, type DeckSummary, type Locale } from '@sixtysix/shared'
+import { seasonDecksNow, DECK_ANSWER_MAX, DECK_MAX_QUESTIONS, DECK_TEXT_MAX, DECK_TITLE_MAX, type DeckQuestion, type DeckSummary, type Locale } from '@sixtysix/shared'
 import { useAccountStore } from '../account/accountStore'
 import { tServer, useLocale, useT } from '../i18n'
 import { communityDecks, deleteDeck, loadDeck, myDecks, reportDeck, saveDeck, type DeckDraft } from './deckApi'
@@ -111,6 +111,7 @@ function CommunityList({ onPick }: { onPick: (d: DeckSummary) => void }) {
   const [decks, setDecks] = useState<DeckSummary[] | null>(null)
   const [error, setError] = useState('')
   const [reported, setReported] = useState<string[]>([])
+  const featured = q ? [] : seasonDecksNow()
 
   const search = useCallback(() => {
     void communityDecks(q, lang).then((res) => (res.ok ? (setDecks(res.decks), setError('')) : setError(res.error)))
@@ -134,8 +135,30 @@ function CommunityList({ onPick }: { onPick: (d: DeckSummary) => void }) {
           </button>
         ))}
       </div>
+      {featured.length > 0 && (
+        <>
+          <h4 className="deck-featured-head">{t('decks.featured')}</h4>
+          <ul className="deck-list deck-featured">
+            {featured.map((d) => (
+              <li key={d.id}>
+                <span className="deck-emoji" aria-hidden="true">{d.emoji}</span>
+                <div className="deck-info">
+                  <strong>{d.title[locale]}</strong>
+                  <small>{t('decks.count', { n: d.questions.length })} · {t('decks.withVerses')}</small>
+                </div>
+                <button
+                  className="btn-play deck-use"
+                  onClick={() => onPick({ id: d.id, title: d.title[locale], lang: locale, public: true, count: d.questions.length, author: '66', plays: 0 })}
+                >
+                  {t('decks.use')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       {error && <p className="arena-error">{tServer(error)}</p>}
-      {decks?.length === 0 && <p className="deck-empty">{t('decks.noneFound')}</p>}
+      {decks?.length === 0 && featured.length === 0 && <p className="deck-empty">{t('decks.noneFound')}</p>}
       <ul className="deck-list">
         {decks?.map((d) => (
           <li key={d.id}>

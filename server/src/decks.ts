@@ -8,6 +8,7 @@ import {
   DECK_TEXT_MAX,
   DECK_TITLE_MAX,
   deckProblem,
+  seasonDeck,
   hasRole,
   isLocale,
   type AnswerSet,
@@ -17,7 +18,7 @@ import {
   type Question,
 } from '@sixtysix/shared'
 import { accountRoute, bodyOf, clientIp, db, roleOf, sha256, userFromRequest } from './accounts.js'
-import { shuffle } from './bank.js'
+import { inPlay, questionById, shuffle } from './bank.js'
 
 /**
  * Player-made question decks. Private decks are only listed for their owner;
@@ -97,13 +98,21 @@ function cleanQuestions(raw: unknown): DeckQuestion[] {
 
 /** Title and size for a room's chips; undefined when the deck is gone or hidden. */
 export function deckInfo(id: unknown): { id: string; title: string; count: number } | undefined {
+  const season = seasonDeck(id)
+  // The app shows a seasonal deck's title in its own language (seasonDeck), so English here.
+  if (season) return { id: season.id, title: season.title.en, count: season.questions.length }
   const r = rowById(id)
   if (!r || r.hidden) return undefined
   return { id: r.id, title: r.title, count: summary(r).count }
 }
 
-/** `count` questions from a deck, shuffled, as game questions (no verse, no flags). */
+/** `count` questions from a deck, shuffled, as game questions (a player deck: no verse, no flags). */
 export function deckQuestions(id: string, count: number): Question[] {
+  const season = seasonDeck(id)
+  if (season) {
+    const qs = season.questions.filter(inPlay).map(questionById).filter((q): q is Question => !!q)
+    return shuffle(qs).slice(0, count).sort((a, b) => a.difficulty - b.difficulty)
+  }
   const r = rowById(id)
   if (!r || r.hidden) return []
   db.prepare('UPDATE decks SET plays = plays + 1 WHERE id = ?').run(r.id)

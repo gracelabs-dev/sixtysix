@@ -1,12 +1,11 @@
-import { useState } from 'react'
 import { ARENA_MODES, CATEGORIES, DIFFICULTY_PRESETS, type Category, type RoomConfig } from '@sixtysix/shared'
 import { useT } from '../../i18n'
-import { DeckSheet } from '../../decks/DeckSheet'
+import { QuestionSource } from '../../decks/QuestionSource'
 
 const QUESTION_COUNTS = [5, 10, 15, 20]
 
-/** The host's game options (mode, length, difficulty, books, room type): new game and lobby. */
-export function RoomOptions({ value, onChange }: { value: RoomConfig; onChange: (next: RoomConfig) => void }) {
+/** The host's game options (questions, mode, length, difficulty, books, room type): new game and lobby; `source: false` when QuestionSource is already shown above. */
+export function RoomOptions({ value, onChange, source = true }: { value: RoomConfig; onChange: (next: RoomConfig) => void; source?: boolean }) {
   const t = useT()
   const mode = value.mode ?? 'classic'
   const categories = value.categories ?? []
@@ -16,28 +15,11 @@ export function RoomOptions({ value, onChange }: { value: RoomConfig; onChange: 
     set({
       categories: categories.includes(c) ? categories.filter((x) => x !== c) : [...categories, c],
     })
-  const [picking, setPicking] = useState(false)
-  const deck = value.deckId ? value.deckTitle : undefined
+  const deck = !!value.deckId
 
   return (
     <>
-      <div className="seg-row deck-pick-row">
-        <button className={`seg-btn ${!deck ? 'selected' : ''}`} onClick={() => set({ deckId: '', deckTitle: undefined, questionCount: 10 })}>
-          {t('decks.bible')}
-        </button>
-        <button className={`seg-btn ${deck ? 'selected' : ''}`} onClick={() => setPicking(true)}>
-          {deck ? `🗂️ ${deck}` : t('decks.own')}
-        </button>
-      </div>
-      {picking && (
-        <DeckSheet
-          onClose={() => setPicking(false)}
-          onPick={(d) => {
-            set({ deckId: d.id, deckTitle: d.title, questionCount: d.count })
-            setPicking(false)
-          }}
-        />
-      )}
+      {source && <QuestionSource value={value} onChange={onChange} />}
       <div className="mode-picker">
         {ARENA_MODES.map((m) => (
           <button key={m} className={`seg-btn mode-btn ${mode === m ? 'selected' : ''}`} onClick={() => set({ mode: m })}>

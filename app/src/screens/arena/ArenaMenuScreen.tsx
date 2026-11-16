@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { isNameAllowed, type RoomConfig } from '@sixtysix/shared'
-import { tServer, useT } from '../../i18n'
+import { tServer, useLocale, useT } from '../../i18n'
 import { InfoButton } from '../../tutorial/InfoButton'
 import { useGameStore } from '../../game/store'
 import { useArenaStore } from '../../arena/arenaStore'
 import { LookButton } from '../../looks/LookPicker'
 import { RoomOptions } from './RoomOptions'
+import { QuestionSource } from '../../decks/QuestionSource'
+import { deckLabel } from '../../decks/deckLabel'
 
 const DEFAULT_CONFIG: RoomConfig = { questionCount: 10, roomType: 'in-person', difficulty: 'mixed', categories: [], mode: 'classic' }
 const OPTIONS_KEY = 'sixtysix.arenaOptions.v1'
@@ -32,6 +34,7 @@ const sameConfig = (a: RoomConfig, b: RoomConfig) =>
 
 export function ArenaMenuScreen() {
   const t = useT()
+  const locale = useLocale((s) => s.locale)
   const goTo = useGameStore((s) => s.goTo)
   const player = useGameStore((s) => s.player)
   const updateProfile = useGameStore((s) => s.updateProfile)
@@ -50,8 +53,8 @@ export function ArenaMenuScreen() {
   const summary = [
     t(`arena.modes.${config.mode ?? 'classic'}.label`),
     t('arena.hostLobby.questions', { n: config.questionCount }),
-    ...(config.deckId && config.deckTitle
-      ? [`🗂️ ${config.deckTitle}`]
+    ...(config.deckId
+      ? [deckLabel(config, locale) ?? '']
       : [t(`arena.difficulty.${config.difficulty ?? 'mixed'}`), ...(cats.length ? [cats.map((c) => t(`quiz.categories.${c}`)).join(' · ')] : [])]),
   ].join(' · ')
 
@@ -115,11 +118,12 @@ export function ArenaMenuScreen() {
       <button className="btn-play host-btn" disabled={busy} onClick={host}>
         {t('safety.hostGame')}
       </button>
+      <QuestionSource value={config} onChange={setConfig} own={more} />
       {changed && <p className="arena-hint host-summary">{summary}</p>}
       <button className="be-link host-more" aria-expanded={more} onClick={() => setMore(!more)}>
         {more ? '▾' : '▸'} {t('safety.moreOptions')}
       </button>
-      {more && <RoomOptions value={config} onChange={setConfig} />}
+      {more && <RoomOptions value={config} onChange={setConfig} source={false} />}
       <p className="arena-hint">
         {t('arena.menu.hostHint')}
       </p>

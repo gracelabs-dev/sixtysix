@@ -28,5 +28,20 @@
 .deck-a.right input{ border-color: #3c9a3c; }
 .deck-editor-foot{ display: flex; justify-content: space-between; }
 .deck-delete{ color: #ff9b8a !important; }
-.deck-pick-row .seg-btn{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .deck-sheet .arena-hint{ margin: 0; color: #e9c98a; }
+/* Where the questions come from (QuestionSource): Bible, seasonal decks (dashed), own deck; the deck sheet's seasonal section */
+.q-source{ display: flex; flex-direction: column; gap: 6px; margin: 10px 0 2px; }
+.q-source .profile-label{ margin: 0; }
+.q-source-pills{ display: flex; flex-wrap: wrap; gap: 6px; }
+.q-pill{ flex: 0 1 auto; min-width: 0; min-height: 44px; margin: 0; padding: 6px 11px; box-sizing: border-box; border-radius: 999px;
+  border: 2px solid #c9a24a; background: rgb(255 248 225 / 0.6); color: #4a2c12; font: 700 0.84rem/1.15 'Cinzel', serif;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; cursor: pointer; }
+.q-season{ display: flex; flex-direction: column; gap: 6px; padding: 8px 8px 9px; border-radius: 14px; border: 2px dashed #b88a3a; background: rgb(255 240 200 / 0.45); }
+.q-season-head{ font: 700 0.78rem/1.2 'Cinzel', serif; letter-spacing: 0.06em; text-transform: uppercase; color: #7a2a14; }
+.q-season .q-source-pills{ display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+.q-season .q-pill{ padding: 4px 6px; border-radius: 12px; white-space: normal; text-align: center; font-size: 0.8rem; }
+.q-pill.own{ font-weight: 600; color: #6b4a22; }
+.q-pill.selected{ border-style: solid; border-color: #8a5a14; background: linear-gradient(#ffe08a, #e3b754); color: #3a210c; box-shadow: 0 2px 0 #8a5a14; }
+.deck-featured-head{ margin: 4px 0 0; font: 700 0.85rem/1.2 'Cinzel', serif; letter-spacing: 0.08em; text-transform: uppercase; color: #ffe08a; }
+.deck-featured li{ border-color: #e3b754; background: rgb(227 183 84 / 0.12); }
+.deck-emoji{ flex: none; font-size: 1.5rem; }
