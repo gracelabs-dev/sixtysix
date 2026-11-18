@@ -79,6 +79,8 @@ export default {
     c4: { title: 'Arbeiterrolle', text: 'Beantworte 2 von 3 Fragen richtig, und ein Bau ist 5 Minuten früher fertig.' },
     c5: { title: 'Markt und Geschenke', text: 'Der Markt kauft und verkauft Material. Die Leute auf deinem Hof haben manchmal ein Geschenk: Tippe sie an.' },
     c6: { title: 'Felder und Expeditionen', text: 'Ab dem Steinhaus wachsen auf den Feldern vor deinem Zaun Gerste und Weizen; das Backhaus backt Brot für große Bauten. Ab Haus 4 schickst du Arbeiter auf Expeditionen für Stein, Ziegel, Kupfer, Zedernholz und Gold; mit einem Stall bringen sie mehr nach Hause.' },
+    c7: { title: 'Gute und schlechte Tage', text: 'Ab und zu geschieht etwas, wenn du nach Hause kommst: Philister am Tor (beantworte Fragen, um sie zu vertreiben), ein Erdbeben, Dürre, Heuschrecken oder Feuer, aber auch Besucher, eine Karawane oder Frühregen. Beschädigte Gebäude produzieren die Hälfte, bis ein Bauarbeiter oder dein Lehrling sie repariert; eine starke Mauer und ein tiefer Brunnen schützen dich.' },
+    c8: { title: 'Die Stadt', text: 'Ab dem Steinhaus erhebt die Stadt eine wöchentliche Haussteuer für Feste und eine Wasserleitung; bring den Zehnten für eine Woche Segen und gib für den Tempel, den die höheren Häuser brauchen. Ab Haus 5 kannst du eine Arbeit mit täglicher Schicht annehmen, und die Besten werden vielleicht Statthalter.' },
   },
   city: {
     name: 'Jerusalem',

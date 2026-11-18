@@ -79,6 +79,8 @@ export default {
     c4: { title: 'Munkások tekercse', text: 'Ha 3 kérdésből 2-re jól felelsz, egy építkezés 5 perccel hamarabb kész.' },
     c5: { title: 'Piac és ajándékok', text: 'A Piac nyersanyagot vesz és elad. Az udvarodon dolgozók néha ajándékot hoznak: koppints rájuk.' },
     c6: { title: 'Mezők és expedíciók', text: 'A Kőháztól a kerítéseden kívüli mezőkön árpa és búza terem; a pékség kenyeret süt a nagy építkezésekhez. A 4. háztól munkásokat küldhetsz expedícióra kőért, tégláért, rézért, cédrusért és aranyért; istállóval többet hoznak haza.' },
+    c7: { title: 'Jó és rossz napok', text: 'Néha történik valami, amikor hazatérsz: filiszteusok a kapunál (válaszolj, hogy elűzd őket), földrengés, aszály, sáska vagy tűz, de vendégek, karaván vagy korai eső is. A megrongált épületek felét termelik, amíg egy építő vagy az inasod meg nem javítja őket; az erős fal és a mély kút megvéd.' },
+    c8: { title: 'A város', text: 'A kőháztól a város heti házadót szed ünnepekre és vízvezetékre; hozd el a tizedet egy hét áldásért, és adakozz a templomnak, amire a magasabb házszinteknek szükségük van. Az 5. házszinttől munkát vállalhatsz napi műszakkal, és a legjobbak helytartók lehetnek.' },
   },
   city: {
     name: 'Jeruzsálem',

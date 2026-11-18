@@ -362,8 +362,7 @@ comes, at most one bad event every 3 days.
   fee. The term is four weeks.
 - The governor's powers: the toll, the treasury's first project and a feast.
 
-Still open: elders and an election (§7.2), and a guide card for events and
-the city in the tutorial.
+Still open: elders and an election (§7.2).
 - Costs of the *existing* levels 5–7 were left alone; only the new levels
   follow the steeper curve.
 
