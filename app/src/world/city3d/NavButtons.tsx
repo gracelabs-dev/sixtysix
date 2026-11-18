@@ -11,8 +11,8 @@ export interface NavTexts {
   zoomOut: string
 }
 
-/** Compass (north up), turn left / right, zoom in / out. Camera moves from code ask for a frame (the canvas renders on demand). */
-export function NavButtons({ bridge, still, zoom, texts, minDist, startDist, startPolar }: { bridge: Bridge; still: boolean; zoom: { in: boolean; out: boolean }; texts: NavTexts; minDist: number; startDist: number; startPolar: number }) {
+/** Compass (north up), turn left / right, zoom in / out; `turn: false` (My Home's fixed view) leaves out the first three. Camera moves from code ask for a frame (the canvas renders on demand). */
+export function NavButtons({ bridge, still, zoom, texts, minDist, startDist, startPolar, turn: canTurn = true }: { bridge: Bridge; still: boolean; zoom: { in: boolean; out: boolean }; texts: NavTexts; minDist: number; startDist: number; startPolar: number; turn?: boolean }) {
   const c = () => bridge.controls
   const turn = (a: number) => {
     void c()?.rotate(a, 0, !still)
@@ -32,22 +32,26 @@ export function NavButtons({ bridge, still, zoom, texts, minDist, startDist, sta
   }
   return (
     <div className="pz-zoom c3-nav">
-      <button className="c3-compass" onClick={northUp} title={texts.north} aria-label={texts.north}>
-        <span
-          className="c3-needle"
-          ref={(el) => {
-            bridge.compass = el
-          }}
-        >
-          <span className="c3-n">{texts.northLetter}</span>
-        </span>
-      </button>
-      <button onClick={() => turn(-Math.PI / 4)} title={texts.turnLeft} aria-label={texts.turnLeft}>
-        ⟲
-      </button>
-      <button onClick={() => turn(Math.PI / 4)} title={texts.turnRight} aria-label={texts.turnRight}>
-        ⟳
-      </button>
+      {canTurn && (
+        <>
+          <button className="c3-compass" onClick={northUp} title={texts.north} aria-label={texts.north}>
+            <span
+              className="c3-needle"
+              ref={(el) => {
+                bridge.compass = el
+              }}
+            >
+              <span className="c3-n">{texts.northLetter}</span>
+            </span>
+          </button>
+          <button onClick={() => turn(-Math.PI / 4)} title={texts.turnLeft} aria-label={texts.turnLeft}>
+            ⟲
+          </button>
+          <button onClick={() => turn(Math.PI / 4)} title={texts.turnRight} aria-label={texts.turnRight}>
+            ⟳
+          </button>
+        </>
+      )}
       <button onClick={() => zoomBy(0.6)} disabled={!zoom.in} title={texts.zoomIn} aria-label={texts.zoomIn}>
         +
       </button>

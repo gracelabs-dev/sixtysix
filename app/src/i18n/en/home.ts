@@ -440,6 +440,8 @@ export default {
   },
 
   full: {
+    idea: 'Idea',
+    ideaTitle: 'A suggestion for what to build next',
     raid: 'Raiders!',
     tax: 'Tax',
     visitors: 'Visitors',

@@ -464,3 +464,6 @@ img.jr-plot-house{ width: 64px; height: 50px; object-fit: contain; filter: drop-
 .hpf-info .hev, .hpf-info .hp-round{ margin: 0; }
 .hpf-info .hev-card, .hpf-info .hev-news, .hpf-info .hev-chips span, .hpf-info .hp-round span{ background: rgb(29 15 6 / 0.85); }
 @media (prefers-reduced-motion: reduce){ .hpf-fab.alarm{ animation: none; } }
+/* The suggestion: a 💡 in the bottom-left corner; its card floats up over it. */
+.hpf-idea{ position: relative; justify-self: start; }
+.hpf-idea-card{ position: absolute; left: 0; bottom: calc(100% + 8px); width: min(340px, calc(100vw - 80px)); }

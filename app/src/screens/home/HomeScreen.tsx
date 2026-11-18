@@ -418,7 +418,7 @@ function YardFull({ plot, now, seen, onBack, onMarket }: { plot: PlotState; now:
       </div>
       <div className="hpf-bottom">
         {error && <p className="hp-error">{tServer(error)}</p>}
-        <NextStep plot={plot} />
+        <Idea plot={plot} />
       </div>
       <AnimatePresence>
         {info && (
@@ -441,5 +441,27 @@ function YardFull({ plot, now, seen, onBack, onMarket }: { plot: PlotState; now:
         )}
       </AnimatePresence>
     </>
+  )
+}
+
+/** A suggestion, only when asked for: a 💡 in the corner opens the next step (players build what they like). */
+function Idea({ plot }: { plot: PlotState }) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  if (!suggestNext(plot)) return null
+  return (
+    <div className="hpf-idea">
+      <AnimatePresence>
+        {open && (
+          <motion.div key="card" className="hpf-idea-card" initial={{ opacity: 0, y: 12, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: 0.9 }} transition={spring.gentle} onClick={() => setOpen(false)}>
+            <NextStep plot={plot} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <button className={`hpf-fab ${open ? 'gold' : ''}`} onClick={() => setOpen((v) => !v)} title={t('home.full.ideaTitle')}>
+        <span>💡</span>
+        <small>{t('home.full.idea')}</small>
+      </button>
+    </div>
   )
 }

@@ -279,6 +279,7 @@ export default function Plot3D({ levels, plot, now = 0, seen, onSelect, onGift, 
         minDist={PLOT_MIN_DIST}
         startDist={box.current ? plotStartDist(box.current.clientWidth / Math.max(1, box.current.clientHeight)) : 55}
         startPolar={PLOT_START_POLAR}
+        turn={false}
         texts={{ north: t('home.scene.north'), northLetter: t('city.map.northLetter'), turnLeft: t('home.scene.turnLeft'), turnRight: t('home.scene.turnRight'), zoomIn: t('home.scene.zoomIn'), zoomOut: t('home.scene.zoomOut') }}
       />
     </div>

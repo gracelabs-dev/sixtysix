@@ -20,6 +20,8 @@ export interface Bridge {
   compass: HTMLElement | null
   /** The open speech bubble: which figure and its element. */
   bubble: { id: string; el: HTMLElement | null } | null
+  /** The view never turns (My Home): two-finger twists are ignored. */
+  fixedView?: boolean
   /** Signs over figures' heads (My Home's gift carriers), by actor id; Townsfolk3D places them. */
   badges: Map<string, HTMLElement>
   /** Zoom limits reached, for the +/− buttons. */

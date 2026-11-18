@@ -48,6 +48,8 @@ export interface RigLimits {
   maxPolar: number
   /** Where the camera's target may go. */
   boundary: [Vector3, Vector3]
+  /** A farm game's camera (My Home): the view never turns or tilts; one finger or the left button drags the land, two fingers pinch. */
+  fixed?: { azimuth: number; polar: number }
 }
 
 /**
@@ -76,6 +78,15 @@ export function configureRig(c: CameraControls, limits: RigLimits) {
   c.polarRotateSpeed = 0.8
   c.dollySpeed = 0.8
   c.setBoundary(new Box3(limits.boundary[0], limits.boundary[1]))
+  if (limits.fixed) {
+    c.mouseButtons.left = A.TRUCK as never
+    c.touches.two = A.TOUCH_DOLLY_TRUCK as never
+    c.minAzimuthAngle = c.maxAzimuthAngle = limits.fixed.azimuth
+    c.minPolarAngle = c.maxPolarAngle = limits.fixed.polar
+    // The land stays under the finger while dragging, then glides to a stop.
+    c.draggingSmoothTime = 0.02
+    c.smoothTime = 0.3
+  }
 }
 
 /**
@@ -101,7 +112,7 @@ export function useScenePointer(bridge: Bridge, box: React.RefObject<HTMLDivElem
       const ps = pointers.current
       const prev = ps.get(e.pointerId)
       if (!prev) return
-      if (ps.size === 2 && e.pointerType === 'touch') {
+      if (ps.size === 2 && e.pointerType === 'touch' && !bridge.fixedView) {
         const [a, b] = [...ps.entries()]
         const other = a[0] === e.pointerId ? b[1] : a[1]
         const before = Math.atan2(prev.y - other.y, prev.x - other.x)
