@@ -15,7 +15,7 @@ export interface Bubble {
   key: number
 }
 
-const BUBBLE_MS = 3600
+const BUBBLE_MS = 2500
 
 /** The open bubble and its setter; it closes itself after a while. */
 export function useSpeechBubble(bridge: Bridge) {

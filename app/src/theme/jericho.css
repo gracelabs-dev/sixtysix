@@ -1,11 +1,11 @@
 /* ══ The March on Jericho (ceremony/jericho/Jericho.tsx) ═══════════════════ */
-.jr{ position: absolute; inset: 0; z-index: 12; display: flex; overflow: hidden; background: #1d0b06; color: #fff; }
-.jr.wide{ flex-direction: row; }
-.jr.tall{ flex-direction: column; }
+.jch{ position: absolute; inset: 0; z-index: 12; display: flex; overflow: hidden; background: #1d0b06; color: #fff; }
+.jch.wide{ flex-direction: row; }
+.jch.tall{ flex-direction: column; }
 
 .jr-box{ position: relative; flex: 1; min-width: 0; min-height: 0; display: grid; place-items: center; }
-.jr.wide.has-rail .jr-box{ flex: 0 0 75%; }
-.jr.tall .jr-box{ flex: none; }
+.jch.wide.has-rail .jr-box{ flex: 0 0 75%; }
+.jch.tall .jr-box{ flex: none; }
 .jr-stage{ position: relative; overflow: hidden; }
 .jr-world{ position: absolute; top: 0; }
 .jr-bg{ position: absolute; inset: 0; background: url('/art/bg-jericho.webp') 0 0 / 100% 100% no-repeat; }
@@ -31,7 +31,7 @@
   background: radial-gradient(closest-side, #ffe39a99, transparent); pointer-events: none;
   animation: jr-breathe 2.4s ease-in-out infinite;
 }
-.jr.final .jr-gate-glow{ display: none; }
+.jch.final .jr-gate-glow{ display: none; }
 @keyframes jr-breathe{ 50%{ opacity: 0.45; scale: 0.9; } }
 
 .jr-crowd{ position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -124,14 +124,14 @@
 
 /* ── title, horns, standings rail ─────────────────────────────────────── */
 .jr-head{ flex: none; text-align: center; padding: calc(env(safe-area-inset-top) + 52px) 12px 6px; }
-.jr.wide .jr-head{ padding: 0; }
+.jch.wide .jr-head{ padding: 0; }
 .jr-title{ font: 900 clamp(17px, 2.1vw, 34px) / 1.05 'Cinzel', serif; color: #f2c35b; text-shadow: 0 2px 0 #000; }
-.jr.tall .jr-title{ font-size: clamp(17px, 5vw, 26px); }
+.jch.tall .jr-title{ font-size: clamp(17px, 5vw, 26px); }
 .jr-title small{ display: block; margin-top: 0.3em; font: 700 clamp(10px, 0.95vw, 16px) / 1.3 'Cinzel', serif; color: #f3dfb0; letter-spacing: 0.08em; text-transform: uppercase; }
-.jr.tall .jr-title small{ font-size: clamp(10px, 3vw, 13px); }
+.jch.tall .jr-title small{ font-size: clamp(10px, 3vw, 13px); }
 .jr-horns{ display: flex; justify-content: center; gap: 2%; margin-top: 1.2vh; }
 .jr-horns img{ width: 11%; max-width: 54px; filter: grayscale(1) brightness(0.45); transition: filter 0.4s; }
-.jr.tall .jr-horns img{ width: 9%; max-width: 40px; }
+.jch.tall .jr-horns img{ width: 9%; max-width: 40px; }
 .jr-horns img.lit{ filter: none; }
 .jr-horns img.pop{ animation: jr-horn 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
 @keyframes jr-horn{ 0%{ scale: 0.3; filter: grayscale(1) brightness(0.45); } 60%{ filter: brightness(1.6) drop-shadow(0 0 8px #ffd76a); } 100%{ scale: 1; filter: none; } }
@@ -141,7 +141,7 @@
   padding: calc(clamp(10px, 2vh, 20px) + clamp(48px, 8vh, 74px)) 1.3vw 2vh;
   background: linear-gradient(#4a0f0c, #2b0806); border-left: 4px solid #b9822a; box-shadow: inset 6px 0 0 #0005;
 }
-.jr.tall .jr-rail{ flex: 1; border-left: 0; border-top: 4px solid #b9822a; padding: 1.4vh 3vw calc(env(safe-area-inset-bottom) + 1.4vh); }
+.jch.tall .jr-rail{ flex: 1; border-left: 0; border-top: 4px solid #b9822a; padding: 1.4vh 3vw calc(env(safe-area-inset-bottom) + 1.4vh); }
 .jr-rows{ position: relative; flex: 1; min-height: 0; }
 .jr-row{
   position: absolute; left: 0; right: 0; height: calc(100% / var(--rows) - 0.7vh); box-sizing: border-box;

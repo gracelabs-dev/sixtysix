@@ -457,14 +457,17 @@ function Figures({ atlas, actors, roads, bridge, still, space }: Props & { atlas
     [geo, mat, shadowGeo, shadowMat, atlas],
   )
 
-  // Taps on screen: the figure whose picture (at least ~44 px wide) holds the point, nearest the camera first.
+  // Taps on screen: the figure whose picture holds the point, nearest the camera first. Only a carrier
+  // with a gift gets a generous ~44 px target; others must be hit on their picture, so they don't steal
+  // taps meant for the buildings behind them, and the one already talking lets the next tap through.
   useEffect(() => {
     bridge.pickFigure = (x, y) => {
       let best: Sim3 | null = null
       for (const s of sims.current.values()) {
-        if (!s.vis || s.state === 'inside') continue
-        const w = Math.max(44, s.sw)
-        const h = Math.max(44, s.sh)
+        if (!s.vis || s.state === 'inside' || s.a.id === bridge.bubble?.id) continue
+        const min = s.a.badge ? 44 : 0
+        const w = Math.max(min, s.sw * 0.8)
+        const h = Math.max(min, s.sh)
         if (x > s.sx - w / 2 && x < s.sx + w / 2 && y > s.sy - h && y < s.sy + 6 && (!best || s.sy > best.sy)) best = s
       }
       if (!best || !tapSim(best)) return null

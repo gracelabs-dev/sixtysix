@@ -71,3 +71,25 @@ export function spotStatus(b: BuildingId, levels: Record<BuildingId, number>, pl
     isNew: seen && plot ? level > seen[b] : false,
   }
 }
+
+/** The homestead's news dismissed on this device (shared/src/events.ts news ids). */
+const SEEN_NEWS_KEY = 'sixtysix.homeNews.v1'
+export function loadSeenNews(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(SEEN_NEWS_KEY) ?? '[]') as string[]
+  } catch {
+    return []
+  }
+}
+export function saveSeenNews(ids: string[]): void {
+  try {
+    localStorage.setItem(SEEN_NEWS_KEY, JSON.stringify(ids))
+  } catch {
+    // Private mode: it shows again next time.
+  }
+}
+/** News on this plot not yet dismissed on this device. */
+export const unseenNews = (plot: PlotState) => {
+  const seen = loadSeenNews()
+  return (plot.events?.news ?? []).filter((n) => !seen.includes(n.id)).length
+}

@@ -53,11 +53,13 @@ export function JerusalemScreen() {
     }
   }, [reload])
 
-  // Today's clues and my duels, once per opening of the city (never polled).
+  // Today's clues and my duels, once per opening of the city (never polled). Keyed by the username:
+  // loading the duels adopts the account, a new object, which must not load them again.
+  const username = account?.username
   useEffect(() => {
     void useHuntStore.getState().load()
-    if (account) void useDuelStore.getState().load()
-  }, [account])
+    if (username) void useDuelStore.getState().load()
+  }, [username])
   const duelsWaiting = useDuelStore((s) => duelBadge(s.duels))
 
   /** A landmark tapped: a guess while a riddle is being searched for; otherwise its card opens as ever. */
@@ -115,6 +117,11 @@ export function JerusalemScreen() {
           )}
           {failed && !residents && <p className="cm-offline">{t('city.screen.offline')}</p>}
           <div className="cx-side">
+            {account && (
+              <button className="cm-chip gold cx-home" onClick={() => goTo('home')} title={t('city.screen.openHomeTitle')}>
+                🏡 <span>{t('city.screen.openHome')}</span>
+              </button>
+            )}
             <HuntChip />
             <button className="cm-chip" onClick={() => goTo('duel')} title={t('duel.title')} aria-label={t('duel.chipAria', { n: duelsWaiting })}>
               ⚔️ {duelsWaiting > 0 && <span className="cx-count">{duelsWaiting}</span>}

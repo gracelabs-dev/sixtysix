@@ -8,8 +8,8 @@ export default {
   },
 
   map: {
-    myHome: 'Mein Zuhause',
-    myHomeTitle: 'Zurück zu meinem Zuhause',
+    myHome: 'Mein Grund',
+    myHomeTitle: 'Mein Grundstück auf der Karte zeigen',
     temple: 'Tempel',
     templeTitle: 'Zurück zum Tempel',
     zoomIn: 'Hineinzoomen',
@@ -37,6 +37,8 @@ export default {
   },
 
   screen: {
+    openHome: 'Mein Zuhause',
+    openHomeTitle: 'Auf deinem eigenen Hof bauen',
     map: '🗺️ Karte',
     list: 'Liste',
     loading: 'Auf dem Weg hinauf nach Jerusalem …',

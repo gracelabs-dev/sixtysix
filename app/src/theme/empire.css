@@ -1047,7 +1047,6 @@
 .tabbar-label{ position: relative; font: 800 11px/1.1 'Cinzel', serif; letter-spacing: 0.02em; white-space: nowrap; }
 .app-tabbed .tab-screen:not(.jr-map){ padding-bottom: var(--tabbar-space); }
 .app-tabbed .pz-zoom{ bottom: calc(var(--tabbar-space) - 4px); }
-.app-tabbed .tab-screen.jr-map > .cx-side{ bottom: calc(var(--tabbar-space) + 4px); }
 .app-tabbed .cm-found{ bottom: calc(var(--tabbar-space) - 4px); }
 .app-tabbed .tab-screen.jr-map > .cm-offline{ bottom: calc(var(--tabbar-space) - 4px); }
 @media (prefers-reduced-motion: reduce){ .tabbar-pill{ transition: none; } }

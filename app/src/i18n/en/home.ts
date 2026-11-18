@@ -439,6 +439,22 @@ export default {
     },
   },
 
+  full: {
+    raid: 'Raiders!',
+    tax: 'Tax',
+    visitors: 'Visitors',
+    caravan: 'Caravan',
+    tithe: 'Tithe',
+    weeds: 'Weeds',
+    collect: 'Collect',
+    harvest: 'Harvest',
+    scroll: '−{n} min',
+    work: 'Work',
+    notes: 'Notes',
+    notesTitle: '📋 Round the homestead',
+    storeTitle: 'Your storehouse, water and builders',
+  },
+
   buildings: {
     house: { name: 'House', what: 'The heart of your plot. Each house level unlocks the next level of every other building.' },
     well: { name: 'Well', what: 'Supplies water points. The brick kiln, sheepfold and olive grove each use some, so deepen the well to grow them.' },

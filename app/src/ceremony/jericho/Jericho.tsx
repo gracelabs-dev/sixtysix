@@ -456,7 +456,7 @@ export function Jericho({ entries, played, total, wide, rail, final = false, onD
   )
 
   return (
-    <div className={`jr ${wide ? 'wide' : 'tall'} ${rail ? 'has-rail' : ''} ${final ? 'final' : ''}`} ref={rootRef}>
+    <div className={`jch ${wide ? 'wide' : 'tall'} ${rail ? 'has-rail' : ''} ${final ? 'final' : ''}`} ref={rootRef}>
       {!wide && header}
       <div className="jr-box" ref={boxRef} style={wide ? undefined : { height: size.h }}>
         <div className="jr-stage" style={{ width: size.w, height: size.h }} role="img" aria-label={t('ceremony.jericho.alt')}>
