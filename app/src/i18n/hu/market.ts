@@ -1,7 +1,7 @@
 export default {
   title: 'Piac',
   hero: 'A piac a Juh-kapunál',
-  heroSub: 'Vedd meg, ami kell. A fölösleget fél áron adhatod el.',
+  heroSub: 'Vedd meg, ami kell. A fölösleget fél áron adhatod el, de minél többet adsz el egy nap, annál kevesebbet kapsz.',
   signUp: '🔒 Hozz létre ingyenes fiókot, hogy kereskedhess a piacon ›',
   madeBy: {
     wood: 'Műhely',
@@ -15,8 +15,13 @@ export default {
     wheat: 'Mezők · Jn 12,24',
     bread: 'Pékség · Mt 24,41',
     copper: 'Rézbányák · 5Móz 8,9',
+    wine: 'Szőlőskert · Ézs 5,1',
+    linen: 'Takácsház · Péld 31,13',
+    tools: 'Kovácsműhely · 1Sám 13,19',
+    honey: 'Méhes · 2Móz 3,8',
   },
   noSell: 'nem eladó',
+  flooded: 'Ma már sokat eladtál: az ár {pct} %-a',
   buy: 'Vétel',
   sell: 'Eladás +{n}',
   bought: 'Megvetted: {amount}',
@@ -24,7 +29,7 @@ export default {
   note: 'Érmét csak kérdések megválaszolásával szerezhetsz. Valódi pénzért itt semmit sem lehet venni.',
   stall: {
     title: 'A családok standja',
-    sub: 'Kereskedj más családokkal: kínáld a felesleges anyagaidat érméért, vagy vedd meg, amit mások kínálnak. Az ár a piac felvásárlási és eladási ára között marad.',
+    sub: 'Kereskedj más családokkal: kínáld a felesleges anyagaidat érméért, vagy vedd meg, amit mások kínálnak. Az ár a piac felvásárlási ára és a piaci ár felé eső félút között marad; a kapunál az eladó 10 % vámot fizet.',
     what: 'Anyag',
     price: 'Ár',
     low: 'legalább {n}',

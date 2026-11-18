@@ -14,14 +14,16 @@ import type { Graph, Pt } from './life/nav'
 /**
  * The yard's stops: the house door (hd), where the two stone paths cross (x),
  * a stop at each building's door (st storehouse, e3 olive grove, wl well,
- * ct Bakehouse, fd sheepfold, ws workshop, kl kiln, sb Stable, g the gate)
+ * ct Bakehouse, fd sheepfold, ws workshop, kl kiln, sb Stable, vy vineyard,
+ * wv weaver, sm smithy, ap apiary, g the gate)
  * and the open earth between them. The 3D yard places them (plotSpace.ts).
  */
-export type YardNode = 'hd' | 'x' | 'n1' | 'n0' | 'e1' | 'st' | 'e2' | 'e3' | 'wl' | 'c1' | 'ct' | 's1' | 't1' | 's2' | 'fd' | 's3' | 'w1' | 'ws' | 'y1' | 'kl' | 'g' | 'f1' | 'sb'
+export type YardNode = 'hd' | 'x' | 'n1' | 'n0' | 'e1' | 'st' | 'e2' | 'e3' | 'wl' | 'c1' | 'ct' | 's1' | 't1' | 's2' | 'fd' | 's3' | 'w1' | 'ws' | 'y1' | 'kl' | 'g' | 'f1' | 'sb' | 'vy' | 'wv' | 'sm' | 'ap'
 export const YARD_EDGES: [YardNode, YardNode][] = [
   ['hd', 'x'], ['x', 'n1'], ['n1', 'n0'], ['x', 'e1'], ['e1', 'st'], ['e1', 'e2'], ['e2', 'e3'], ['e2', 'f1'], ['x', 'c1'], ['c1', 'ct'],
   ['c1', 's1'], ['c1', 'wl'], ['s1', 't1'], ['s1', 's2'], ['s2', 'fd'], ['s2', 's3'], ['s1', 'w1'], ['w1', 'ws'], ['w1', 'y1'], ['y1', 'c1'],
   ['y1', 'wl'], ['y1', 'g'], ['y1', 'kl'], ['y1', 'f1'], ['f1', 'wl'], ['f1', 'e3'], ['kl', 'g'], ['sb', 'n0'], ['sb', 't1'],
+  ['vy', 'e2'], ['wv', 'n1'], ['sm', 'e1'], ['ap', 't1'], ['ap', 'n1'],
 ]
 
 /** Where the yard's people and animals are, in walker px (heights are `H` × `P`). */
@@ -54,7 +56,7 @@ interface Spec {
 /** Who lives on a plot with these building levels. */
 function specsFor(levels: Record<BuildingId, number>, L: YardLayout): Spec[] {
   const out: Spec[] = []
-  const { house, fold, workshop, kiln, grove, well, store, wall, stable } = levels
+  const { house, fold, workshop, kiln, grove, well, store, wall, stable, vineyard, weaver, smithy, apiary } = levels
   const at = (n: YardNode) => L.graph.nodes[n]
   const { front: FRONT_YARD, house: HOUSE_YARD, cat: CAT } = L.areas
   const walker = (fig: FigureId, stops: YardNode[], more: Partial<Spec> = {}) => out.push({ fig, h: H.adult, speed: 15, start: at(stops[0]), stops, ...more })
@@ -84,6 +86,11 @@ function specsFor(levels: Record<BuildingId, number>, L: YardLayout): Spec[] {
   }
   // The Stable's donkey goes to the gate and back (the fold's own donkey comes with its level 4).
   if (stable >= 1 && fold < 4) walker('donkey', ['sb', 't1', 'y1', 'g'], { h: H.donkey, speed: 9, pause: [5, 11] })
+  // From House 7: grapes to the storehouse, cloth to the house, the smith's man and a beekeeper about the yard.
+  if (vineyard >= 1) walker('picker', ['vy', 'st', 'e2'], { enter: ['st'], pause: [3, 7] })
+  if (weaver >= 1) walker('woman', ['wv', 'hd', 'n1'], { enter: ['hd'], speed: 11 })
+  if (smithy >= 1) walker('man', ['sm', 'e1', 'kl', 'ws'], { speed: 13, pause: [2, 5] })
+  if (apiary >= 1) walker('elder', ['ap', 't1', 'sb'], { speed: 8, pause: [5, 10] })
   // Craftsmen at their benches, the watchman on the wall by the tower.
   if (workshop >= 1) out.push({ fig: 'carpenter', h: 5.6, start: L.spots.carpenter, left: true })
   if (kiln >= 2) out.push({ fig: 'brickmaker', h: 6, start: L.spots.brickmaker })

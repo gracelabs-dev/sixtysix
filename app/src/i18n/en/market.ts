@@ -2,7 +2,7 @@
 export default {
   title: 'Market',
   hero: 'The Market by the Sheep Gate',
-  heroSub: 'Buy what you need. Spares sell for half.',
+  heroSub: 'Buy what you need. Spares sell for half, less the more you sell in a day.',
   signUp: '🔒 Create a free account to trade at the Market ›',
   madeBy: {
     wood: 'Workshop',
@@ -16,8 +16,13 @@ export default {
     wheat: 'Fields · John 12:24',
     bread: 'Bakehouse · Matt 24:41',
     copper: 'Copper mines · Deut 8:9',
+    wine: 'Vineyard · Isa 5:1',
+    linen: 'Weaver’s house · Prov 31:13',
+    tools: 'Smithy · 1 Sam 13:19',
+    honey: 'Apiary · Ex 3:8',
   },
   noSell: 'not sold',
+  flooded: 'Plenty sold today: {pct} % of the price',
   buy: 'Buy',
   sell: 'Sell +{n}',
   bought: 'Bought {amount}',
@@ -25,7 +30,7 @@ export default {
   note: 'Coins come only from answering questions. There is nothing to buy with real money.',
   stall: {
     title: 'The families’ stall',
-    sub: 'Trade with other families: put spare materials up for coins, or buy what others offer. The price stays between what the Market pays and what it asks.',
+    sub: 'Trade with other families: put spare materials up for coins, or buy what others offer. The price stays between what the Market pays and halfway to what it asks; the gate takes a toll of 10 % from the seller.',
     what: 'Material',
     price: 'Price',
     low: 'lowest {n}',

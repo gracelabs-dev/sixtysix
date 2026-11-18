@@ -87,8 +87,9 @@
 .p3[data-far]:not(.touring) .p3-build .hp-bar{ display: none; }
 .p3[data-far]:not(.touring) .p3-build small{ font-size: 11px; }
 @media (prefers-reduced-motion: reduce){ .p3-badge > span, .p3 .lf-bubble{ animation: none; } .p3 .p3-stack .ps-tag, .p3-ribbon, .p3-build{ transition: none; } }
-/* My Home in 3D with the fields: the scene is the screen's main thing. */
-.ps.p3, .ps.p3-loading{ height: min(62vh, 560px); }
+/* My Home in 3D: the scene is the screen's main thing, most of the screen as in a farm game. */
+.ps.p3, .ps.p3-loading{ height: clamp(380px, 74dvh, 900px); }
+.ps.p3.yard-lab{ height: auto; flex: 1; min-height: 0; }
 .p3-amb{ z-index: 1; }
 .p3-amb .ps-cloud{ z-index: auto; opacity: 0.8; }
 .p3-amb .ps-birds{ z-index: auto; }

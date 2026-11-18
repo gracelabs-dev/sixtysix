@@ -77,7 +77,7 @@ Only this path affects quizzes, and only as **gifts**: limited uses per game.
 | 1 | **Haggler** | 2 | Market prices −5 / −10 % |
 | 2 | **Skilled workers** | 2 | Workers' scrolls take 7 / 10 min off instead of 5 |
 | 2 | **Good neighbour** | 1 | Your helping hand on a friend's build takes 10 min off |
-| 3 | **Third builder** | 1 | Build three things at once |
+| 3 | **Apprentice** (was Third builder; id `third`) | 1 | An apprentice: builds anything of ≤ 2 h on his own, or helps a builder (−25 % of the time left); later also repairs |
 | 4 | **Quick hands** | 1 | Builds of 15 minutes or less finish instantly |
 | 5 | **Master builder** (Ex 31:3) | 1 | Once a week, finish any build instantly |
 
@@ -139,7 +139,7 @@ Only this path affects quizzes, and only as **gifts**: limited uses per game.
   at sign-in (`source: 'merge'`) gets no bonus.
 - **Builder and Steward**, through `PlotMods` in the shared plot rules: build
   time, Market buy and sell prices, Workers' scroll minutes (still ≤ 50 % of a
-  build), Third builder (+1 builder at any house level), Quick hands (≤ 15 min
+  build), the Apprentice (short builds on his own, or −25 % on one build at a time), Quick hands (≤ 15 min
   after Many hands → instant), production, storage, Deep wells (+2 water once
   a well exists), Seven good years (+50 % for 7 days after each house level).
   Weekly cedar and Master builder are buttons in the skill's sheet; the week

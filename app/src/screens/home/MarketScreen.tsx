@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { MATERIAL_INFO, MATERIALS, buyPrice, modsOf, sellPrice, sellable, type Material } from '@sixtysix/shared'
+import { FLOOD, FLOOD_FLOOR, MATERIAL_INFO, MATERIALS, buyPrice, modsOf, sellPrice, sellable, soldToday, type Material } from '@sixtysix/shared'
 import { useGameStore } from '../../game/store'
 import { useAccountStore } from '../../account/accountStore'
 import { usePlotStore } from '../../plot/plotStore'
@@ -14,13 +14,13 @@ import { Stall } from './Stall'
 
 const AMOUNTS = [1, 10, 50] as const
 
-/** The Market: buy materials with coins, sell spares at half price. All trades run on the server. */
+/** The Market: buy materials with coins, sell spares at half price, less the more you sell in a day. All trades run on the server. */
 export function MarketScreen() {
   const lastTab = useGameStore((s) => s.lastTab)
   const goTo = useGameStore((s) => s.goTo)
   const coins = useGameStore((s) => s.player.coins)
   const account = useAccountStore((s) => s.account)
-  const { plot, busy, error, load, buy, sell, marketBack, say } = usePlotStore()
+  const { plot, busy, error, load, buy, sell, marketBack, say, now } = usePlotStore()
   const t = useT()
   const locale = useLocale((s) => s.locale)
   const [qty, setQty] = useState<number>(10)
@@ -77,12 +77,16 @@ export function MarketScreen() {
           const have = plot?.inventory[m] ?? 0
           const mods = plot ? modsOf(plot) : undefined
           const price = buyPrice(m, qty, mods)
+          // The flooded market: what the next unit pays today, as a share of the full price.
+          const sold = plot ? soldToday(plot, m, now()) : 0
+          const pct = Math.round(Math.max(FLOOD_FLOOR, FLOOD ** sold) * 100)
           return (
             <motion.div key={m} className="mk-row" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring.gentle, delay: i * STAGGER }}>
               <span className="mk-icon">{info.icon}</span>
               <span className="mk-name">
                 <strong>{materialName(m)}</strong>
                 <small>{t(`market.madeBy.${m}`)}</small>
+                {sellable(m) && sold > 0 && <small className="mk-flood">{t('market.flooded', { pct })}</small>}
               </span>
               {account && (
                 <motion.span className="mk-have" key={`${m}-${have}`} animate={bump === m ? pulse : undefined}>
@@ -95,7 +99,7 @@ export function MarketScreen() {
                 </button>
                 {sellable(m) ? (
                   <button className="hp-btn small" disabled={!account || busy || have < qty} onClick={() => void trade(m, 'sell')}>
-                    {t('market.sell', { n: sellPrice(m, qty, mods).toLocaleString(locale) })}
+                    {t('market.sell', { n: sellPrice(m, qty, mods, sold).toLocaleString(locale) })}
                   </button>
                 ) : (
                   // Grain, bread and copper only ever become buildings.

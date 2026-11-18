@@ -19,20 +19,25 @@ import { releaseAfterUpload } from './textures'
  * in the painting (yard.ts YARD_EDGES), laid out here round the 3D spots.
  */
 
-export const R = 31
+export const R = 45
 
 /** Each spot's centre and turn (radians about y; 0 = front to the south, towards the camera). */
 export const SPOT_3D: Record<Spot, { x: number; z: number; ry: number }> = {
-  house: { x: 0, z: -15, ry: 0 },
-  store: { x: 12.5, z: -6.5, ry: -0.6 },
-  grove: { x: 16, z: 8.5, ry: -0.5 },
-  well: { x: 5.5, z: 6.5, ry: 0 },
-  bake: { x: -5, z: 1, ry: 0 },
-  fold: { x: -15, z: 6.5, ry: 0.4 },
-  workshop: { x: -9, z: 17, ry: 0.5 },
-  kiln: { x: 8.5, z: 17.5, ry: -0.5 },
+  house: { x: 0, z: -22, ry: 0 },
+  store: { x: 18, z: -9.5, ry: -0.6 },
+  grove: { x: 23, z: 12.5, ry: -0.5 },
+  well: { x: 8, z: 9.5, ry: 0 },
+  bake: { x: -7, z: 1.5, ry: 0 },
+  fold: { x: -21.5, z: 9.5, ry: 0.4 },
+  workshop: { x: -13, z: 25, ry: 0.5 },
+  kiln: { x: 12.5, z: 25.5, ry: -0.5 },
   // The Stable, inside the west corner, its open front to the yard.
-  stable: { x: -20.5, z: -2.5, ry: 1.28 },
+  stable: { x: -29.5, z: -3.5, ry: 1.28 },
+  // From House 7: the vineyard in the east corner, the weaver and the smithy either side behind the house, the bees by the Stable.
+  vineyard: { x: 31, z: -2, ry: -1.1 },
+  weaver: { x: -15, z: -18, ry: 0.6 },
+  smithy: { x: 16, z: -21, ry: -0.6 },
+  apiary: { x: -15, z: -6, ry: 0.9 },
   wall: { x: 0, z: R - GATE_HALF, ry: 0 },
 }
 
@@ -42,29 +47,33 @@ const u = (x: number, z: number): Pt => ({ x: x * PX, y: z * PX })
 
 /** The path graph's nodes in units: a stop in front of each building's door, the crossing in front of the house, the open earth between. */
 const NODES: Record<YardNode, [number, number]> = {
-  hd: [0.6, -10.2],
-  x: [1, -5],
-  n1: [-7, -8.5],
-  n0: [-13, -11],
-  e1: [6, -3],
-  st: [10.5, -3.6],
-  e2: [10.5, 2],
-  e3: [12.8, 11],
-  wl: [4, 9.6],
-  c1: [-0.5, 4.5],
-  ct: [-3.5, 4],
-  s1: [-6, 9],
-  t1: [-9.5, 3.5],
-  s2: [-11, 11.5],
-  fd: [-13, 10.5],
-  s3: [-16.5, 11.5],
-  w1: [-4, 13],
-  ws: [-6.5, 20],
-  y1: [0, 14],
-  kl: [6.5, 20.5],
-  g: [0, 25],
-  f1: [9, 13],
-  sb: [-16.8, -1.4],
+  hd: [0.9, -15.2],
+  x: [1.5, -7.3],
+  n1: [-10.2, -12.3],
+  n0: [-18.9, -16],
+  e1: [8.7, -4.4],
+  st: [14.8, -5.6],
+  e2: [15.2, 2.9],
+  e3: [18.6, 16],
+  wl: [5.8, 13.9],
+  c1: [-0.7, 6.5],
+  ct: [-5.1, 5.8],
+  s1: [-8.7, 13],
+  t1: [-13.8, 5.1],
+  s2: [-16, 16.7],
+  fd: [-18.9, 15.2],
+  s3: [-23.9, 16.7],
+  w1: [-5.8, 18.9],
+  ws: [-9.4, 29],
+  y1: [0, 20.3],
+  kl: [9.4, 29.7],
+  g: [0, 39],
+  f1: [13, 18.9],
+  sb: [-24.4, -2],
+  vy: [26.6, 0.2],
+  wv: [-13, -14.5],
+  sm: [14, -17.4],
+  ap: [-12, -3.6],
 }
 
 const area = (x: number, z: number, rx: number, rz: number) => ({ x: x * PX, y: z * PX, rx: rx * PX, ry: rz * PX })
@@ -72,8 +81,8 @@ const area = (x: number, z: number, rx: number, rz: number) => ({ x: x * PX, y: 
 /** The yard's layout for its people and animals (walker px: units × `PX`). */
 export const YARD_3D: YardLayout = {
   graph: graph(Object.fromEntries(Object.entries(NODES).map(([k, [x, z]]) => [k, u(x, z)])), YARD_EDGES),
-  spots: { camel: u(-19.5, 9.5), carpenter: u(-4.4, 19.6), brickmaker: u(4.4, 19.4), watchman: u(-25.5, 2.2) },
-  areas: { front: area(0, 19.5, 2.6, 2.2), house: area(5, -8, 2.5, 1.2), cat: area(-1.8, -9.8, 2, 0.6) },
+  spots: { camel: u(-28.3, 13.8), carpenter: u(-6.4, 28.4), brickmaker: u(6.4, 28.1), watchman: u(-39.5, 2.2) },
+  areas: { front: area(0, 28.3, 3.8, 3.2), house: area(7.3, -11.6, 3.6, 1.7), cat: area(-2.6, -14.4, 2.9, 0.9) },
   P: 6.4,
 }
 
@@ -102,7 +111,7 @@ const smooth = (a: number, b: number, x: number) => {
 }
 
 /** The ground's size (units) and its height: flat in and round the yard, rising into low hills beyond. */
-export const GROUND = 220
+export const GROUND = 280
 export function groundAt(x: number, z: number): number {
   // The valley south of the gate (the fields) stays flat much further out than the other sides.
   const r = Math.hypot(x, z > 0 ? z * 0.55 : z)
@@ -197,7 +206,7 @@ export function groundTexture(size = 1024): Texture {
   g.drawImage(small, 0, 0, size, size)
 
   // 2. Brushwork on the earth: soft strokes of lighter and darker paint.
-  for (let i = 0; i < 900; i++) {
+  for (let i = 0; i < 1900; i++) {
     const x = (rand() * 2 - 1) * R
     const z = (rand() * 2 - 1) * R
     if (Math.abs(x) + Math.abs(z) > R - 1.2) continue
@@ -274,7 +283,7 @@ export function groundTexture(size = 1024): Texture {
   }
 
   // 6. Pebbles on the earth: pale stones with a shadow under them.
-  for (let i = 0; i < 260; i++) {
+  for (let i = 0; i < 550; i++) {
     const x = (rand() * 2 - 1) * R
     const z = (rand() * 2 - 1) * R
     if (Math.abs(x) + Math.abs(z) > R - 1) continue
@@ -423,16 +432,20 @@ export function placeYardGreens(): { tufts: { m: Matrix4[]; c: Color[] }; bushes
 export const PLOT_MIN_DIST = 14
 export const PLOT_START_POLAR = 0.92
 /** Half the width and half the (foreshortened) depth the first view shows (units), and the most it may ever show. */
-const START_HALF: [number, number] = [25, 19]
-const MAX_HALF: [number, number] = [44, 36]
+const START_HALF: [number, number] = [16, 13]
+const MAX_HALF: [number, number] = [62, 54]
 export const PLOT_FOV = 42
 const tanHalf = Math.tan(((PLOT_FOV / 2) * Math.PI) / 180)
 const fit = ([w, h]: [number, number], aspect: number) => Math.max(w / (tanHalf * Math.min(1.8, aspect)), h / tanHalf)
 
 /** The start distance for a canvas of this aspect: the yard's middle fills the view. */
 export function plotStartDist(aspect: number): number {
-  return Math.min(90, Math.max(40, fit(START_HALF, aspect)))
+  return Math.min(70, Math.max(34, fit(START_HALF, aspect)))
 }
+/** Where the first view looks: just in front of the house, like a farm game's opening view. */
+export const PLOT_START_Z = -8
+/** The camera's target stays in the yard and the fields (min, max corners in units). */
+export const PLOT_BOUNDS: [[number, number, number], [number, number, number]] = [[-(R - 8), -1, -(R - 12)], [R - 8, 6, R + 18]]
 /** The farthest out: the whole yard and a little round it. */
 export const plotMaxDist = (aspect: number) => Math.max(plotStartDist(aspect) * 1.1, fit(MAX_HALF, aspect))
 
@@ -467,18 +480,24 @@ export function placeYardWeeds(stage: number): { m: Matrix4[]; c: Color[] } {
 
 /** Where each thing stands (units, turn), and the house level it comes with. Clear of the spots and the paths. */
 export const YARD_PROPS: { prop: PropId; x: number; z: number; ry?: number; house: number }[] = [
-  { prop: 'fire', x: -3.2, z: 10.5, house: 1 },
-  { prop: 'garden', x: -9.5, z: -15.8, ry: -0.785, house: 2 },
-  { prop: 'washing', x: 7.8, z: -13.2, ry: 1.2, house: 2 },
-  { prop: 'tree', x: -2.5, z: -25, house: 2 },
-  { prop: 'bench', x: 22, z: -1, ry: -1.2, house: 3 },
-  { prop: 'jars', x: -4.2, z: 25, ry: 0.4, house: 3 },
-  { prop: 'tree', x: 4, z: -24, ry: 2, house: 3 },
-  { prop: 'cart', x: 4.4, z: 24, ry: 0.9, house: 4 },
-  { prop: 'dovecote', x: 9.5, z: -17, house: 4 },
-  { prop: 'flowers', x: -2.6, z: -9.9, house: 5 },
-  { prop: 'flowers', x: 3.4, z: -9.9, ry: 1, house: 5 },
-  { prop: 'bench', x: -21, z: 6.5, ry: 1.9, house: 6 },
+  { prop: 'fire', x: -4.6, z: 15.2, house: 1 },
+  { prop: 'garden', x: -8, z: -29, ry: -0.785, house: 2 },
+  { prop: 'washing', x: 8, z: -29.5, ry: 1.2, house: 2 },
+  { prop: 'tree', x: -3.6, z: -36, house: 2 },
+  { prop: 'bench', x: 24, z: -13, ry: -1.2, house: 3 },
+  { prop: 'jars', x: -5, z: 34, ry: 0.4, house: 3 },
+  { prop: 'tree', x: 5.8, z: -34.5, ry: 2, house: 3 },
+  { prop: 'cart', x: 5, z: 34, ry: 0.9, house: 4 },
+  { prop: 'dovecote', x: -22, z: -12, house: 4 },
+  { prop: 'flowers', x: -3.8, z: -14.6, house: 5 },
+  { prop: 'flowers', x: 4.9, z: -14.6, ry: 1, house: 5 },
+  { prop: 'bench', x: -30.5, z: 9.4, ry: 1.9, house: 6 },
+  { prop: 'tree', x: -12, z: -31, ry: 1, house: 7 },
+  { prop: 'jars', x: 25, z: 4.5, ry: 1.4, house: 8 },
+  { prop: 'flowers', x: -10, z: 9, house: 9 },
+  { prop: 'bench', x: -3.5, z: -30.5, ry: 0.1, house: 10 },
+  { prop: 'flowers', x: 20.5, z: -26, ry: 2, house: 11 },
+  { prop: 'tree', x: 28, z: -12, ry: 0.4, house: 12 },
 ]
 
 const propCache = new Map<number, BufferGeometry>()

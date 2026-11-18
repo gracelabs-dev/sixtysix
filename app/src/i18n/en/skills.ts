@@ -73,7 +73,7 @@ export default {
     haggler: { name: 'Haggler', effect: { 1: 'Market prices −5 %', 2: 'Market prices −10 %' } },
     workers: { name: 'Skilled workers', effect: { 1: "Workers' scrolls take 7 min off", 2: "Workers' scrolls take 10 min off" } },
     neighbour: { name: 'Good neighbour', effect: { 1: "Your helping hand on a friend's build takes 10 min off" } },
-    third: { name: 'Third builder', effect: { 1: 'One more builder: build three things at once (two before the courtyard house)' } },
+    third: { name: 'Apprentice', effect: { 1: 'An apprentice: builds anything of 2 hours or less on his own, or helps a builder (25 % off the time left)' } },
     quick: { name: 'Quick hands', effect: { 1: 'Builds of 15 minutes or less finish instantly' } },
     master: { name: 'Master builder', effect: { 1: 'Once a week, finish any build instantly' } },
     harvest: { name: 'Good harvest', effect: { 1: 'Producers make +10 %', 2: '+20 %', 3: '+30 %' } },
