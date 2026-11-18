@@ -13,6 +13,7 @@ import { NO_MODS, SEVEN_YEARS_MS, type PlotMods } from './skills'
 import type { GiftLog } from './life'
 import type { Bake, Crop, Expedition, Glean } from './farm'
 import type { DayCount, Helper } from './homeLife'
+import type { JobState } from './jobs'
 import { AQUEDUCT_WATER, FEAST_BOOST, TEMPLE_FOR_HOUSE, TITHE_BLESSING, taxDue, type CityBoons } from './civic'
 
 export const MATERIALS = ['wood', 'bricks', 'stone', 'wool', 'oil', 'cedar', 'gold', 'barley', 'wheat', 'bread', 'copper', 'wine', 'linen', 'tools', 'honey'] as const
@@ -499,6 +500,8 @@ export interface PlotState {
   templeGiven?: number
   /** The city's running boons, set by the server on every load, never stored. */
   city?: CityBoons
+  /** Work in the city (shared/src/jobs.ts). */
+  job?: JobState
 }
 
 export type EventKind = 'philistines' | 'repelled' | 'quake' | 'drought' | 'locusts' | 'fire' | 'fireOut' | 'visitors' | 'caravan' | 'rain'

@@ -9,6 +9,7 @@
 import { DAY_MS } from './city'
 import { weekStartUtc } from './skills'
 import { MATERIAL_INFO, MATERIALS, type Material, type Materials, type PlotState } from './plot'
+import type { GovernorSeat } from './jobs'
 
 // ── the house tax (Matt 17:24–27; 22:21) ───────────────────────────────
 
@@ -79,13 +80,20 @@ export interface CityState {
   aqueductUntil: number
   /** Coins' worth given to the Temple, by username. */
   donors: Record<string, number>
+  /** The governor (shared/src/jobs.ts), and who passed the exam and waits for the seat, in order. */
+  governor?: GovernorSeat
+  candidates?: string[]
+  /** The gate toll the governor set (default STALL_TOLL), and which project the treasury pays for first. */
+  toll?: number
+  first?: ProjectId
 }
 export const EMPTY_CITY: CityState = { treasury: 0, temple: 0, feastUntil: 0, aqueductUntil: 0, donors: {} }
 
-/** The treasury pays for what isn't running yet, the feast first. Returns what started. */
+/** The treasury pays for what isn't running yet, the governor's choice (or the feast) first. Returns what started. */
 export function fundProjects(c: CityState, now: number): ProjectId[] {
   const started: ProjectId[] = []
-  for (const id of PROJECT_IDS) {
+  const order = c.first === 'aqueduct' ? (['aqueduct', 'feast'] as const) : PROJECT_IDS
+  for (const id of order) {
     const key = id === 'feast' ? 'feastUntil' : 'aqueductUntil'
     if (c[key] > now || c.treasury < PROJECTS[id].cost) continue
     c.treasury -= PROJECTS[id].cost
@@ -101,6 +109,22 @@ export interface CityBoons {
   temple: number
   feastUntil: number
   aqueductUntil: number
+  /** The governor's name and term, and the gate toll. */
+  governor?: string
+  governorUntil?: number
+  toll?: number
+}
+
+/** The governor's term is over: the first candidate in line takes the seat (or the governor stays on). Returns true when it changed. */
+export function rotateGovernor(c: CityState, now: number): boolean {
+  if (!c.governor || c.governor.until > now) return false
+  const next = c.candidates?.[0]
+  const term = 28 * DAY_MS
+  if (next) {
+    c.governor = { username: next, since: now, until: now + term }
+    c.candidates = c.candidates!.slice(1)
+  } else c.governor = { ...c.governor, until: now + term }
+  return true
 }
 
 /** Water from the well, with the city's aqueduct while it runs (the plot's clock is its `updatedAt`). */

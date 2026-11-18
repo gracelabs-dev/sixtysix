@@ -30,7 +30,7 @@ export default {
   note: 'Coins come only from answering questions. There is nothing to buy with real money.',
   stall: {
     title: 'The families’ stall',
-    sub: 'Trade with other families: put spare materials up for coins, or buy what others offer. The price stays between what the Market pays and halfway to what it asks; the gate takes a toll of 10 % from the seller.',
+    sub: 'Trade with other families: put spare materials up for coins, or buy what others offer. The price stays between what the Market pays and halfway to what it asks; the gate takes a toll (5–15 %, set by the governor) from the seller.',
     what: 'Material',
     price: 'Price',
     low: 'lowest {n}',

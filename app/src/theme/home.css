@@ -401,3 +401,14 @@ img.jr-plot-house{ width: 64px; height: 50px; object-fit: contain; filter: drop-
 .tpl-give select{ font: inherit; padding: 4px 6px; border-radius: 8px; max-width: 100%; }
 .tpl-donors{ margin: 0; padding-left: 22px; display: grid; gap: 2px; }
 .tpl-donors li span{ display: inline-block; min-width: 50%; }
+/* Work in the city (screens/home/WorkSheet.tsx). */
+.hev-btns{ display: flex; gap: 6px; flex-shrink: 0; }
+.work h4{ margin: 14px 0 4px; }
+.work-jobs{ list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+.work-jobs li{ display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; background: rgb(255 255 255 / 0.35); }
+.work-jobs li.mine{ outline: 2px solid #c9962a; }
+.work-icon{ font-size: 22px; }
+.work-name{ flex: 1; display: grid; gap: 1px; }
+.work-name small{ font-size: 12px; opacity: 0.85; }
+.work-mine{ color: #8a5a10; font-size: 12px; }
+.work-powers{ display: grid; gap: 6px; }

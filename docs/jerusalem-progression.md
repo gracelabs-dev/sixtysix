@@ -355,8 +355,15 @@ comes, at most one bad event every 3 days.
 - The Temple, raised by gifts, which gates House 11 and 12. It takes the place
   of the Temple listed under Phase F.
 
-Not done yet:
-- jobs and the governor (E).
+**Release 4 (Phase E, 2026-11-18): work in the city.**
+- Six jobs (one shift of five questions a day, coins and goods).
+- The governor as the top job. Defaults chosen while the owner's answer was
+  open: House 10, level 30, 50 shifts, an exam of 9 out of 10 and a 2,000-coin
+  fee. The term is four weeks.
+- The governor's powers: the toll, the treasury's first project and a feast.
+
+Still open: elders and an election (§7.2), and a guide card for events and
+the city in the tutorial.
 - Costs of the *existing* levels 5–7 were left alone; only the new levels
   follow the steeper curve.
 

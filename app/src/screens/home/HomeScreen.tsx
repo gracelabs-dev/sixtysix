@@ -45,6 +45,7 @@ import { ExpeditionsView, RoadSheet } from './ExpeditionsView'
 import { ChallengeSheet } from './LifeSheets'
 import { EventsPanel } from './Events'
 import { TempleSheet } from './TempleSheet'
+import { WorkSheet } from './WorkSheet'
 import { SHEEP_PLACES } from '../../world/sheepPlaces'
 import { useIntro } from '../../tutorial/useIntro'
 
@@ -53,7 +54,7 @@ export function HomeScreen() {
   const lastTab = useGameStore((s) => s.lastTab)
   const goTo = useGameStore((s) => s.goTo)
   const account = useAccountStore((s) => s.account)
-  const { plot: raw, loading, error, load, select, selected, scroll, road, challenge, seen, openMarket, view, templeOpen } = usePlotStore()
+  const { plot: raw, loading, error, load, select, selected, scroll, road, challenge, seen, openMarket, view, templeOpen, workOpen } = usePlotStore()
   const t = useT()
   useTick(1000)
   const plot = usePlotStore.getState().projected()
@@ -108,11 +109,12 @@ export function HomeScreen() {
           {view === 'yard' && (
             <>
               <WeedsNote />
-              <EventsPanel plot={plot} now={now} />
+              <EventsPanel plot={plot} now={now} part="actions" />
               <NextStep plot={plot} />
               <HomeScene plot={plot} now={now} seen={seen} />
               {/* Under the scene, so the homestead stays high on the screen. */}
               <RoundNotes plot={plot} now={now} />
+              <EventsPanel plot={plot} now={now} part="status" />
               {plot.levels.field1 > 0 && <Season now={now} />}
               <Actions plot={plot} now={now} />
             </>
@@ -124,6 +126,7 @@ export function HomeScreen() {
       <AnimatePresence>{selected && plot && <BuildingSheet key="sheet" spot={selected} plot={plot} onClose={() => select(null)} />}</AnimatePresence>
       <AnimatePresence>{scroll && <ScrollSheet key="scroll" />}</AnimatePresence>
       <AnimatePresence>{templeOpen && plot && <TempleSheet key="temple" plot={plot} />}</AnimatePresence>
+      <AnimatePresence>{workOpen && plot && <WorkSheet key="work" plot={plot} now={now} />}</AnimatePresence>
       <AnimatePresence>{road && <RoadSheet key="road" />}</AnimatePresence>
       <AnimatePresence>{challenge && <ChallengeSheet key="challenge" />}</AnimatePresence>
       <Toast />

@@ -29,7 +29,7 @@ export default {
   note: 'Münzen gibt es nur für beantwortete Fragen. Mit echtem Geld kann man hier nichts kaufen.',
   stall: {
     title: 'Der Stand der Familien',
-    sub: 'Handle mit anderen Familien: Biete übrige Materialien für Münzen an oder kaufe, was andere anbieten. Der Preis liegt zwischen dem, was der Markt zahlt, und der Hälfte bis zu dem, was er verlangt; am Tor zahlt der Verkäufer 10 % Zoll.',
+    sub: 'Handle mit anderen Familien: Biete übrige Materialien für Münzen an oder kaufe, was andere anbieten. Der Preis liegt zwischen dem, was der Markt zahlt, und der Hälfte bis zu dem, was er verlangt; am Tor zahlt der Verkäufer Zoll (5–15 %, vom Statthalter festgelegt).',
     what: 'Material',
     price: 'Preis',
     low: 'mindestens {n}',

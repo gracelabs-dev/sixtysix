@@ -36,4 +36,4 @@ export const stallRange = (m: Material, qty: number) => ({ min: MATERIAL_INFO[m]
 
 /** The toll at the gate: the seller pays this share of a sold lot's price. */
 export const STALL_TOLL = 0.1
-export const stallToll = (price: number) => Math.ceil(price * STALL_TOLL - 1e-9)
+export const stallToll = (price: number, rate = STALL_TOLL) => Math.ceil(price * rate - 1e-9)

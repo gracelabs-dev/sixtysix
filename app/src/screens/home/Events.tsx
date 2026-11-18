@@ -7,6 +7,7 @@ import { fireConfetti } from '../../motion'
 import { t as tNow, useT } from '../../i18n'
 import { countdown } from './homeUtil'
 import { PayButton } from './FarmPanels'
+import { WorkCard } from './WorkSheet'
 import { buildingName, listMaterials, materialName } from './plotText'
 
 /**
@@ -24,8 +25,10 @@ function loadSeen(): string[] {
   }
 }
 
-export function EventsPanel({ plot, now }: { plot: PlotState; now: number }) {
+/** `actions` (above the scene): what asks for a choice now. `status` (below it): work, the city, what runs, the news. */
+export function EventsPanel({ plot, now, part }: { plot: PlotState; now: number; part: 'actions' | 'status' }) {
   const t = useT()
+  const left = (ms: number) => (ms > 2 * 86_400_000 ? t('home.work.days', { count: Math.ceil(ms / 86_400_000), n: Math.ceil(ms / 86_400_000) }) : countdown(ms))
   const [seen, setSeen] = useState(loadSeen)
   // The three latest not yet dismissed, so the homestead stays high on the screen.
   const news = (plot.events?.news ?? []).filter((n) => !seen.includes(n.id)).slice(0, 3)
@@ -45,21 +48,29 @@ export function EventsPanel({ plot, now }: { plot: PlotState; now: number }) {
   const tithe = !titheError(plot, now)
   const city = plot.city
   const chips = [
-    city && city.feastUntil > now ? t('home.civic.feastChip', { time: countdown(city.feastUntil - now) }) : '',
-    city && city.aqueductUntil > now ? t('home.civic.aqueductChip', { time: countdown(city.aqueductUntil - now) }) : '',
-    plot.titheUntil && plot.titheUntil > now ? t('home.civic.titheChip', { time: countdown(plot.titheUntil - now) }) : '',
-    plot.drought && plot.drought > now ? t('home.events.droughtChip', { time: countdown(plot.drought - now) }) : '',
-    plot.blessUntil && plot.blessUntil > now ? t('home.events.blessChip', { time: countdown(plot.blessUntil - now) }) : '',
+    city && city.feastUntil > now ? t('home.civic.feastChip', { time: left(city.feastUntil - now) }) : '',
+    city && city.aqueductUntil > now ? t('home.civic.aqueductChip', { time: left(city.aqueductUntil - now) }) : '',
+    plot.titheUntil && plot.titheUntil > now ? t('home.civic.titheChip', { time: left(plot.titheUntil - now) }) : '',
+    plot.drought && plot.drought > now ? t('home.events.droughtChip', { time: left(plot.drought - now) }) : '',
+    plot.blessUntil && plot.blessUntil > now ? t('home.events.blessChip', { time: left(plot.blessUntil - now) }) : '',
     plot.rain ? t('home.events.rainChip') : '',
     Object.keys(plot.damage ?? {}).length ? t('home.events.damageChip', { list: Object.keys(plot.damage ?? {}).map((b) => buildingName(b as never)).join(', ') }) : '',
   ].filter(Boolean)
+  if (part === 'actions') {
+    if (!threat && !tax && !tithe && !visitors && !caravan) return null
+    return (
+      <div className="hev">
+        {threat && <Threat until={threat.until} now={now} />}
+        {tax > 0 && <Tax due={tax} />}
+        {visitors && <Visitors />}
+        {caravan && <Caravan plot={plot} now={now} />}
+        {tithe && <Tithe plot={plot} />}
+      </div>
+    )
+  }
   return (
     <div className="hev">
-      {threat && <Threat until={threat.until} now={now} />}
-      {tax > 0 && <Tax due={tax} />}
-      {tithe && <Tithe plot={plot} />}
-      {visitors && <Visitors />}
-      {caravan && <Caravan plot={plot} now={now} />}
+      <WorkCard plot={plot} now={now} />
       {chips.length > 0 && (
         <div className="hev-chips">
           {chips.map((c) => (
