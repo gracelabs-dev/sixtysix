@@ -80,6 +80,8 @@ export default {
     c4: { title: 'Workers’ scroll', text: 'Get 2 of 3 questions right to take 5 minutes off a build.' },
     c5: { title: 'Market and gifts', text: 'The Market buys and sells materials. Workers in your yard sometimes carry a gift: tap them.' },
     c6: { title: 'Fields and expeditions', text: 'From the Stone house the fields outside your fence grow barley and wheat; the Bakehouse makes bread for big builds. From House 4, send workers on expeditions for stone, bricks, copper, cedar and gold; a Stable makes them bring home more.' },
+    c7: { title: 'Good days and bad', text: 'Now and then something happens when you come home: Philistines at the gate (answer to drive them off), an earthquake, drought, locusts or fire, but also visitors, a caravan or early rain. Damaged buildings make half until a builder or your apprentice repairs them; a strong wall and a deep well protect you.' },
+    c8: { title: 'The city', text: 'From the Stone house the city collects a weekly house tax for feasts and an aqueduct; bring a tithe for a week\'s blessing and give to the Temple, which the higher houses need. From House 5 you can take a job with a daily shift, and the best may become governor.' },
   },
   city: {
     name: 'Jerusalem',
