@@ -39,6 +39,20 @@ import {
   titheOf,
   weekStartUtc as weekOf,
   type CityState,
+  GOVERNOR,
+  JOBS,
+  SHIFT_PASS,
+  SHIFT_QUESTIONS,
+  governorError,
+  isJob,
+  rotateGovernor,
+  shiftError,
+  shiftPay,
+  takeJobError,
+  PROJECT_IDS,
+  PROJECTS,
+  DAY_MS,
+  type ProjectId,
   sell,
   WEEKLY_CEDAR,
   advance,
@@ -116,6 +130,7 @@ import {
   STALL_MAX,
   stallRange,
   stallToll,
+  STALL_TOLL,
   stallable,
   type StallLot,
 } from '@sixtysix/shared'
@@ -234,6 +249,8 @@ export function parsePlot(raw: string, now: number): PlotState {
   if (num(p.titheWeek)) base.titheWeek = num(p.titheWeek)
   if (num(p.titheUntil)) base.titheUntil = num(p.titheUntil)
   if (num(p.templeGiven)) base.templeGiven = Math.floor(num(p.templeGiven))
+  const job = obj(p.job)
+  if (job && isJob(job.id)) base.job = { id: job.id, since: num(job.since), day: Math.floor(num(job.day)), shifts: Math.floor(num(job.shifts)), ...(num(job.examWeek) ? { examWeek: num(job.examWeek) } : {}) }
   const sold = obj(p.sold)
   if (sold) base.sold = { day: Math.floor(num(sold.day)), n: materials(sold.n) }
   base.glean = parseGlean(p.glean)
@@ -279,7 +296,17 @@ function load(req: FastifyRequest): Ctx | undefined {
   plot.mods = plotMods(profile.skills?.ranks)
   // The city's feast and aqueduct (shared/src/civic.ts), and its treasury and Temple for the app.
   const city = loadCity()
-  plot.city = { treasury: city.treasury, temple: city.temple, feastUntil: city.feastUntil, aqueductUntil: city.aqueductUntil }
+  let cityChanged = rotateGovernor(city, now)
+  // The governor's weekly stipend (shared/src/jobs.ts), into their own storehouse.
+  const seat = city.governor
+  if (seat && seat.username === row.username && seat.paidWeek !== weekOf(now)) {
+    for (const [m, n] of Object.entries(GOVERNOR.stipend) as [Material, number][]) plot.inventory[m] += n
+    seat.paidWeek = weekOf(now)
+    cityChanged = true
+    savePlot({ row, profile: toAccount(row).profile, plot, now })
+  }
+  if (cityChanged) saveCity(city)
+  plot.city = { treasury: city.treasury, temple: city.temple, feastUntil: city.feastUntil, aqueductUntil: city.aqueductUntil, governor: seat?.username, governorUntil: seat?.until, toll: city.toll ?? STALL_TOLL }
   advance(plot, now)
   const ctx = { row, profile, plot, now }
   // The valley opened: homesteads already at House 3 get Field 1 cleared and sown, once.
@@ -331,7 +358,12 @@ function loadCity(): CityState {
     const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0)
     const donors: Record<string, number> = {}
     for (const [k, v] of Object.entries(p.donors ?? {})) if (n(v)) donors[k.slice(0, 40)] = n(v)
-    return { treasury: n(p.treasury), temple: n(p.temple), feastUntil: n(p.feastUntil), aqueductUntil: n(p.aqueductUntil), donors }
+    const g = p.governor
+    const governor = g && typeof g.username === 'string' && n(g.until) ? { username: g.username, since: n(g.since), until: n(g.until), ...(n(g.paidWeek) ? { paidWeek: n(g.paidWeek) } : {}), ...(n(g.feastAt) ? { feastAt: n(g.feastAt) } : {}) } : undefined
+    const candidates = Array.isArray(p.candidates) ? p.candidates.filter((x): x is string => typeof x === 'string').slice(0, 20) : undefined
+    const toll = typeof p.toll === 'number' && p.toll >= GOVERNOR.tollMin && p.toll <= GOVERNOR.tollMax ? p.toll : undefined
+    const first = PROJECT_IDS.includes(p.first as ProjectId) ? p.first : undefined
+    return { treasury: n(p.treasury), temple: n(p.temple), feastUntil: n(p.feastUntil), aqueductUntil: n(p.aqueductUntil), donors, governor, candidates, toll, first }
   } catch {
     return { ...EMPTY_CITY, donors: {} }
   }
@@ -430,6 +462,23 @@ interface PendingThreat {
   expiresAt: number
 }
 const threats = new Map<number, PendingThreat>()
+/** A job's shift or the governor's exam: their questions (one open set per player). */
+interface PendingQuiz {
+  id: string
+  kind: 'shift' | 'exam'
+  questions: ScrollQuestion[]
+  correct: number[]
+  expiresAt: number
+}
+const quizzes = new Map<number, PendingQuiz>()
+const GOVERNOR_ERRORS: Record<NonNullable<ReturnType<typeof governorError>>, string> = {
+  already: 'You are the governor, or next in line, already',
+  house: 'The governor lives in a Steward’s house (House 10)',
+  level: 'The governor must be level 30 or more',
+  shifts: 'The governor must have worked 50 shifts in the city',
+  coins: 'The governor’s fee is 2,000 coins',
+  week: 'You have sat the exam this week',
+}
 
 /** Questions from the bank as sent to a player: answers shuffled, no bank ids. */
 function asked(qs: ReturnType<typeof pickQuestions>, locale: ReturnType<typeof cleanLocale>) {
@@ -568,8 +617,9 @@ export function registerPlotRoutes(app: FastifyInstance): void {
         const seller = db.prepare('SELECT * FROM users WHERE id = ?').get(lot.user_id) as unknown as UserRow | undefined
         if (seller) {
           const profile = toAccount(seller).profile
-          profile.coins += lot.price - stallToll(lot.price)
-          addTreasury(stallToll(lot.price), c.now)
+          const toll = stallToll(lot.price, loadCity().toll)
+          profile.coins += lot.price - toll
+          addTreasury(toll, c.now)
           saveProfile(seller.id, profile)
         }
       })
@@ -734,11 +784,128 @@ export function registerPlotRoutes(app: FastifyInstance): void {
     return view(c)
   })
 
+  // ── Work in the city (shared/src/jobs.ts) ─────────────────────────────
+
+  /** Take a job: { id }. */
+  route(app, 'post', '/api/plot/job', (c, body) => {
+    if (!isJob(body.id)) return fail('Unknown job')
+    const why = takeJobError(c.plot, body.id, c.now)
+    if (why === 'house') return fail('Jobs in the city open with House 5')
+    if (why === 'switch') return fail('You can change jobs once a week')
+    if (c.plot.job?.id !== body.id) c.plot.job = { id: body.id, since: c.now, day: c.plot.job?.day ?? 0, shifts: c.plot.job?.shifts ?? 0, ...(c.plot.job?.examWeek ? { examWeek: c.plot.job.examWeek } : {}) }
+    savePlot(c)
+    return view(c)
+  })
+
+  /** Today's shift, step 1: { locale } → five questions from the job's part of the Bible. */
+  route(app, 'post', '/api/plot/job/shift', (c, body) => {
+    const why = shiftError(c.plot, c.now)
+    if (why === 'noJob') return fail('Take a job first')
+    if (why === 'done') return fail('You have worked your shift today')
+    const open = quizzes.get(c.row.id)
+    if (open && open.kind === 'shift' && open.expiresAt > c.now) return view(c, { quizId: open.id, questions: open.questions })
+    const qs = pickQuestions(SHIFT_QUESTIONS, { difficulty: 'mixed', categories: [JOBS[c.plot.job!.id].category] })
+    if (qs.length < SHIFT_QUESTIONS) return fail('No questions available')
+    const { questions, correct } = asked(qs, cleanLocale(body.locale))
+    const pending: PendingQuiz = { id: randomBytes(9).toString('base64url'), kind: 'shift', questions, correct, expiresAt: c.now + SCROLL_TTL_MS }
+    quizzes.set(c.row.id, pending)
+    return view(c, { quizId: pending.id, questions })
+  })
+
+  /** The governor's exam, step 1: { locale } → ten questions (once a week; the fee is paid only on passing). */
+  route(app, 'post', '/api/plot/governor/exam', (c, body) => {
+    const city = loadCity()
+    const why = governorError(c.plot, c.profile.xp, c.profile.coins, weekOf(c.now), city.governor?.username === c.row.username || !!city.candidates?.includes(c.row.username))
+    if (why) return fail(GOVERNOR_ERRORS[why])
+    const qs = pickQuestions(GOVERNOR.examQuestions, { difficulty: 'mixed' })
+    if (qs.length < GOVERNOR.examQuestions) return fail('No questions available')
+    const { questions, correct } = asked(qs, cleanLocale(body.locale))
+    // The week's one try starts now: no rerolling the questions.
+    c.plot.job = { ...c.plot.job!, examWeek: weekOf(c.now) }
+    savePlot(c)
+    const pending: PendingQuiz = { id: randomBytes(9).toString('base64url'), kind: 'exam', questions, correct, expiresAt: c.now + SCROLL_TTL_MS * 2 }
+    quizzes.set(c.row.id, pending)
+    return view(c, { quizId: pending.id, questions })
+  })
+
+  /** Step 2 for both: { quizId, answers (−1 = skipped) }. */
+  route(app, 'post', '/api/plot/quiz/answer', (c, body) => {
+    const pending = quizzes.get(c.row.id)
+    if (!pending || pending.id !== body.quizId || pending.expiresAt < c.now) return fail('These questions have expired')
+    const answers = Array.isArray(body.answers) ? body.answers : []
+    if (answers.length !== pending.questions.length || !answers.every((a) => Number.isInteger(a) && a >= -1 && a <= 3)) return fail('Answer every question')
+    quizzes.delete(c.row.id)
+    const right = pending.correct.filter((ci, i) => answers[i] === ci).length
+    if (pending.kind === 'shift') {
+      if (!c.plot.job || shiftError(c.plot, c.now)) return fail('You have worked your shift today')
+      const city = loadCity()
+      const pay = shiftPay(c.plot.job.id, right, city.governor?.username === c.row.username)
+      c.plot.job.day = Math.floor(c.now / DAY_MS)
+      if (right >= SHIFT_PASS) c.plot.job.shifts += 1
+      c.profile.coins += pay.coins
+      for (const [m, n] of Object.entries(pay.goods) as [Material, number][]) c.plot.inventory[m] += n
+      save(c)
+      return view(c, { right, correct: pending.correct, coins: pay.coins, collected: pay.goods })
+    }
+    // The exam: 9 of 10 and the fee → the seat (or the line for it).
+    const passed = right >= GOVERNOR.examPass
+    let seat: 'governor' | 'candidate' | undefined
+    if (passed && c.profile.coins >= GOVERNOR.fee) {
+      atomic(() => {
+        const city = loadCity()
+        c.profile.coins -= GOVERNOR.fee
+        city.treasury += GOVERNOR.fee
+        if (!city.governor || city.governor.until <= c.now) {
+          city.governor = { username: c.row.username, since: c.now, until: c.now + GOVERNOR.termMs }
+          seat = 'governor'
+        } else {
+          city.candidates = [...(city.candidates ?? []), c.row.username]
+          seat = 'candidate'
+        }
+        fundProjects(city, c.now)
+        saveCity(city)
+        save(c)
+      })
+    }
+    return view(c, { right, correct: pending.correct, passed, seat })
+  })
+
+  /** The governor's powers: { toll? (0.05–0.15), first? ('feast' | 'aqueduct'), feast? (true: declare one now, once a term) }. */
+  route(app, 'post', '/api/plot/governor', (c, body) => {
+    const city = loadCity()
+    const g = city.governor
+    if (!g || g.username !== c.row.username || g.until <= c.now) return fail('Only the governor may do that')
+    if (body.toll !== undefined) {
+      const t = Number(body.toll)
+      if (!(t >= GOVERNOR.tollMin - 1e-9 && t <= GOVERNOR.tollMax + 1e-9)) return fail('The toll must be between 5 and 15 %')
+      city.toll = Math.round(t * 100) / 100
+    }
+    if (body.first !== undefined) {
+      if (!PROJECT_IDS.includes(body.first as ProjectId)) return fail('Unknown project')
+      city.first = body.first as ProjectId
+    }
+    if (body.feast === true) {
+      if (g.feastAt && c.now - g.feastAt < GOVERNOR.feastEveryMs) return fail('You have declared a feast already this term')
+      if (city.feastUntil > c.now) return fail('The city is feasting already')
+      if (city.treasury < PROJECTS.feast.cost) return fail('The treasury can’t pay for a feast yet')
+      city.treasury -= PROJECTS.feast.cost
+      city.feastUntil = c.now + PROJECTS.feast.ms
+      g.feastAt = c.now
+    }
+    fundProjects(city, c.now)
+    saveCity(city)
+    if (c.plot.city) c.plot.city = { ...c.plot.city, treasury: city.treasury, feastUntil: city.feastUntil, toll: city.toll ?? STALL_TOLL }
+    return view(c)
+  })
+
   /** The city's treasury, its feast and aqueduct, the Temple and its givers (anyone may look). */
   app.get('/api/city/state', () => {
     const city = loadCity()
     const donors = Object.entries(city.donors).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, given]) => ({ name, given }))
-    return { ok: true, treasury: city.treasury, temple: city.temple, stage: templeStage(city.temple), feastUntil: city.feastUntil, aqueductUntil: city.aqueductUntil, donors }
+    return {
+      ok: true, treasury: city.treasury, temple: city.temple, stage: templeStage(city.temple), feastUntil: city.feastUntil, aqueductUntil: city.aqueductUntil, donors,
+      governor: city.governor ? { name: city.governor.username, until: city.governor.until } : null, candidates: city.candidates ?? [], toll: city.toll ?? STALL_TOLL, first: city.first ?? 'feast',
+    }
   })
 
   /** Collect one producer (`building`) or all of them. */

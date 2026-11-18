@@ -27,6 +27,7 @@ export function ChallengeSheet() {
   const q = ch.questions[i]
   const raid = ch.kind === 'raid'
   const threat = ch.kind === 'threat'
+  const work = ch.kind === 'shift' || ch.kind === 'exam'
 
   const finish = async (all: number[]) => {
     if (await answerChallenge(all)) {
@@ -43,7 +44,13 @@ export function ChallengeSheet() {
 
   let verdict = ''
   if (result) {
-    if (threat) {
+    if (ch.kind === 'shift') {
+      verdict = t('home.work.shiftDone', { right: result.right, total, coins: result.coins ?? 0, list: listMaterials(result.collected ?? {}) || '—' })
+    } else if (ch.kind === 'exam') {
+      verdict = !result.passed
+        ? t('home.work.examFailed', { right: result.right, total })
+        : t(result.seat === 'governor' ? 'home.work.examGovernor' : result.seat === 'candidate' ? 'home.work.examCandidate' : 'home.work.examNoFee', { right: result.right, total })
+    } else if (threat) {
       const n = result.news
       const lost = n?.lost && Object.values(n.lost).some((x) => x) ? listMaterials(n.lost) : ''
       const hits = (n?.hits ?? []).map(buildingName).join(', ')
@@ -63,11 +70,11 @@ export function ChallengeSheet() {
         <button className="hp-sheet-close" onClick={closeChallenge} title={t('home.close')}>
           ✕
         </button>
-        <h3>{threat ? t('home.events.threatTitle') : raid ? t('home.round.raidTitle', { name: ch.field ? buildingName(ch.field) : '' }) : t('home.round.helpTitle', { name: ch.username ?? '' })}</h3>
+        <h3>{work ? t(ch.kind === 'shift' ? 'home.work.shiftTitle' : 'home.work.examTitle') : threat ? t('home.events.threatTitle') : raid ? t('home.round.raidTitle', { name: ch.field ? buildingName(ch.field) : '' }) : t('home.round.helpTitle', { name: ch.username ?? '' })}</h3>
         {error && <p className="hp-scroll-error">{tServer(error)}</p>}
         {!result ? (
           <>
-            <p className="hp-scroll-sub">{threat ? t('home.events.threatSub', { i: i + 1, total }) : raid ? t('home.round.raidSub', { i: i + 1, total, pct: Math.round((RAID_SHARE * 100) / RAID_QUESTIONS) }) : t('home.round.helpSub', { min: HELP.cutMs / 60_000 })}</p>
+            <p className="hp-scroll-sub">{work ? t('home.work.quizSub', { i: i + 1, total }) : threat ? t('home.events.threatSub', { i: i + 1, total }) : raid ? t('home.round.raidSub', { i: i + 1, total, pct: Math.round((RAID_SHARE * 100) / RAID_QUESTIONS) }) : t('home.round.helpSub', { min: HELP.cutMs / 60_000 })}</p>
             <motion.div key={q.id} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={spring.gentle}>
               <p className="hp-scroll-q">{q.text}</p>
               <div className="hp-scroll-answers">

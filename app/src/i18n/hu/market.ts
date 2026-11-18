@@ -29,7 +29,7 @@ export default {
   note: 'Érmét csak kérdések megválaszolásával szerezhetsz. Valódi pénzért itt semmit sem lehet venni.',
   stall: {
     title: 'A családok standja',
-    sub: 'Kereskedj más családokkal: kínáld a felesleges anyagaidat érméért, vagy vedd meg, amit mások kínálnak. Az ár a piac felvásárlási ára és a piaci ár felé eső félút között marad; a kapunál az eladó 10 % vámot fizet.',
+    sub: 'Kereskedj más családokkal: kínáld a felesleges anyagaidat érméért, vagy vedd meg, amit mások kínálnak. Az ár a piac felvásárlási ára és a piaci ár felé eső félút között marad; a kapunál az eladó vámot fizet (5–15 %, a helytartó szabja meg).',
     what: 'Anyag',
     price: 'Ár',
     low: 'legalább {n}',

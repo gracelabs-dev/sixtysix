@@ -8,6 +8,7 @@ import {
   type TripId,
   type FieldId,
   type GiftFigure,
+  type JobId,
   type Material,
   type Materials,
   type News,
@@ -89,13 +90,13 @@ export interface ScrollRound {
 /** Raiders in a field, or a hand lent to a neighbour: the questions, then how they went (shared/src/homeLife.ts). */
 export interface Challenge {
   /** Raiders in a field, a hand lent, or the Philistines at the gate (shared/src/events.ts). */
-  kind: 'raid' | 'help' | 'threat'
+  kind: 'raid' | 'help' | 'threat' | 'shift' | 'exam'
   id: string
   /** The raided field, or the neighbour's username. */
   field?: FieldId
   username?: string
   questions: ScrollQuestion[]
-  result?: { right: number; correct: number[]; lost?: number; collected?: Materials; cutMs?: number; building?: BuildingId; news?: News }
+  result?: { right: number; correct: number[]; lost?: number; collected?: Materials; cutMs?: number; building?: BuildingId; news?: News; coins?: number; passed?: boolean; seat?: 'governor' | 'candidate' }
 }
 
 /** A team about to set out: its road questions, then how they went. */
@@ -174,6 +175,13 @@ interface PlotStore {
   payTax: () => Promise<boolean>
   bringTithe: () => Promise<Materials | null>
   giveTemple: (material: Material, qty: number) => Promise<boolean>
+  /** Work in the city (shared/src/jobs.ts): take a job, today's shift, the governor's exam, the governor's powers. */
+  takeJob: (id: JobId) => Promise<boolean>
+  startShift: () => Promise<void>
+  startExam: () => Promise<void>
+  govern: (change: { toll?: number; first?: 'feast' | 'aqueduct'; feast?: true }) => Promise<boolean>
+  workOpen: boolean
+  setWorkOpen: (open: boolean) => void
   /** The Temple sheet: open or not. */
   templeOpen: boolean
   setTempleOpen: (open: boolean) => void
@@ -412,6 +420,31 @@ export const usePlotStore = create<PlotStore>((set, get) => {
       return !!take(await call('/temple', { material, qty }))
     },
 
+    takeJob: async (id) => {
+      set({ busy: true })
+      return !!take(await call('/job', { id }))
+    },
+
+    startShift: async () => {
+      set({ busy: true })
+      const res = take(await call<{ quizId: string; questions: ScrollQuestion[] }>('/job/shift', { locale: useLocale.getState().locale }))
+      if (res) set({ challenge: { kind: 'shift', id: res.quizId, questions: res.questions }, workOpen: false })
+    },
+
+    startExam: async () => {
+      set({ busy: true })
+      const res = take(await call<{ quizId: string; questions: ScrollQuestion[] }>('/governor/exam', { locale: useLocale.getState().locale }))
+      if (res) set({ challenge: { kind: 'exam', id: res.quizId, questions: res.questions }, workOpen: false })
+    },
+
+    govern: async (change) => {
+      set({ busy: true })
+      return !!take(await call('/governor', change))
+    },
+
+    workOpen: false,
+    setWorkOpen: (open) => set({ workOpen: open }),
+
     templeOpen: false,
     setTempleOpen: (open) => set({ templeOpen: open }),
 
@@ -424,6 +457,11 @@ export const usePlotStore = create<PlotStore>((set, get) => {
       const ch = get().challenge
       if (!ch) return false
       set({ busy: true })
+      if (ch.kind === 'shift' || ch.kind === 'exam') {
+        const r = take(await call<{ right: number; correct: number[]; coins?: number; collected?: Materials; passed?: boolean; seat?: 'governor' | 'candidate' }>('/quiz/answer', { quizId: ch.id, answers }))
+        if (r) set({ challenge: { ...ch, result: { right: r.right, correct: r.correct, coins: r.coins, collected: r.collected, passed: r.passed, seat: r.seat } } })
+        return !!r
+      }
       if (ch.kind === 'threat') {
         const r = take(await call<{ right: number; correct: number[]; news: News }>('/threat/answer', { threatId: ch.id, answers }))
         if (r) set({ challenge: { ...ch, result: { right: r.right, correct: r.correct, news: r.news } } })
