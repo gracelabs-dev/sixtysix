@@ -116,10 +116,12 @@ window.addEventListener('online', () => void useAccountStore.getState().sync())
 // Question flags sent offline go out now; the out-of-play list is refreshed.
 initFlags()
 
-// A lazily loaded file vanished (new deploy while this tab was open): reload once.
+// A lazily loaded file vanished (new deploy while this tab was open): reload. Not again within 30 s,
+// so a file missing for another reason can't loop; a later deploy in the same session reloads again.
 window.addEventListener('vite:preloadError', () => {
-  if (sessionStorage.getItem('sixtysix.reloaded') !== '1') {
-    sessionStorage.setItem('sixtysix.reloaded', '1')
+  const last = Number(sessionStorage.getItem('sixtysix.reloaded')) || 0
+  if (Date.now() - last > 30_000) {
+    sessionStorage.setItem('sixtysix.reloaded', String(Date.now()))
     window.location.reload()
   }
 })
