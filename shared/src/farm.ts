@@ -6,6 +6,7 @@
  * the app (projecting timers) use. Nothing here pays coins or XP: grain,
  * bread and copper can't be sold, so quizzes stay the only coin source.
  */
+import { weather } from './events'
 import {
   MATERIAL_INFO,
   MATERIALS,
@@ -85,7 +86,7 @@ export function cropYield(s: PlotState, field: FieldId, crop: CropId, now: numbe
   const fieldMul = levelDef(field, s.levels[field])?.yield ?? 1
   const floor = levelDef('thresh', s.levels.thresh)?.grainBonus ?? 0
   const season = inSeason(crop, now) ? 1 + SEASON_BONUS : 1
-  return Math.round(CROPS[crop].yield * fieldMul * (1 + floor) * season)
+  return Math.round(CROPS[crop].yield * fieldMul * (1 + floor) * season * weather(s, now))
 }
 
 export type SowError = 'notCleared' | 'growing'
@@ -106,6 +107,7 @@ export const seedMissing = (s: PlotState, crop: CropId): Materials => {
 export function sow(s: PlotState, field: FieldId, crop: CropId, now: number): Crop {
   s.inventory[crop] -= CROPS[crop].seed
   const c: Crop = { crop, sownAt: now, readyAt: now + CROPS[crop].hours * HOUR, amount: cropYield(s, field, crop, now) }
+  delete s.rain // early rain waters one sowing
   s.crops = { ...s.crops, [field]: c }
   return c
 }

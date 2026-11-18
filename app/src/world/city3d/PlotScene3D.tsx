@@ -73,6 +73,8 @@ interface Props {
   idleDays: number
   /** What grows on the six fields, comma separated ('' nothing, shoots, barley, wheat): a string, so it only changes when a bed does. */
   crops: string
+  /** Philistines camped at the gate (shared/src/events.ts). */
+  gate?: boolean
   /** Today's lost sheep: an index into SHEEP_PLACES (undefined: none to find). */
   sheep?: number
 }
@@ -83,7 +85,7 @@ const easeOutBack = (t: number) => {
 }
 
 /** Memoised: Plot3D re-renders every second (countdowns), and fresh array props would make R3F ask for a frame each time. */
-export const PlotScene3D = memo(function PlotScene3D({ levels, building, labels, actors, bridge, still, idleDays, crops, sheep }: Props) {
+export const PlotScene3D = memo(function PlotScene3D({ levels, building, labels, actors, bridge, still, idleDays, crops, sheep, gate }: Props) {
   const { gl, scene, camera, invalidate, size } = useThree()
   const controls = useRef<CameraControls>(null)
   useDisposeOnUnmount(scene)
@@ -257,11 +259,15 @@ export const PlotScene3D = memo(function PlotScene3D({ levels, building, labels,
     if (campMesh.current)
       setInstances(
         campMesh.current,
-        beds.filter((b) => b.raid).map((b) => new Matrix4().makeTranslation(FIELD_3D[b.id].x - FIELD_W / 2 + 3, 0, FIELD_3D[b.id].z + FIELD_D / 2 + 2.2)),
+        beds
+          .filter((b) => b.raid)
+          .map((b) => new Matrix4().makeTranslation(FIELD_3D[b.id].x - FIELD_W / 2 + 3, 0, FIELD_3D[b.id].z + FIELD_D / 2 + 2.2))
+          // The Philistines camp just outside the gate, beside the lane.
+          .concat(gate ? [new Matrix4().makeTranslation(7, 0, R + 3)] : []),
       )
     gl.shadowMap.needsUpdate = true
     invalidate()
-  }, [beds, gl, invalidate])
+  }, [beds, gate, gl, invalidate])
 
   // ── A soft shade on the ground under every building and bed, and a lamp by each door at dusk and at night ──
   const flatGeo = useMemo(() => new PlaneGeometry(1, 1).rotateX(-Math.PI / 2), [])
@@ -534,7 +540,7 @@ export const PlotScene3D = memo(function PlotScene3D({ levels, building, labels,
       <instancedMesh ref={rowMesh} args={[cropGeo.row, mats.crop, MAX_ROWS]} count={0} castShadow receiveShadow frustumCulled={false} />
       <instancedMesh ref={earMesh} args={[cropGeo.ear, mats.crop, MAX_EARS]} count={0} frustumCulled={false} />
 
-      <instancedMesh ref={campMesh} args={[campGeo, mats.plain, FIELD_IDS.length]} count={0} castShadow frustumCulled={false} />
+      <instancedMesh ref={campMesh} args={[campGeo, mats.plain, FIELD_IDS.length + 1]} count={0} castShadow frustumCulled={false} />
       {sheepAt && <mesh geometry={sheepGeometry()} material={mats.plain} position={sheepAt} rotation-y={0.8} scale={1.5} castShadow />}
 
       <instancedMesh ref={contactMesh} args={[flatGeo, contactMat, 20]} count={0} renderOrder={1} frustumCulled={false} />

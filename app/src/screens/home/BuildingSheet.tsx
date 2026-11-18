@@ -4,6 +4,10 @@ import {
   MATERIALS,
   PRODUCERS,
   apprenticeCut,
+  apprenticeFree,
+  builderBuilds,
+  builderCount,
+  checkRepair,
   checkUpgrade,
   isField,
   levelDef,
@@ -19,7 +23,7 @@ import { PaintedCoin } from '../../art/PaintedPortrait'
 import { fireConfetti } from '../../motion'
 import { t as tNow, tServer, useLocale, useT } from '../../i18n'
 import { artFor, buildPct, COURTYARD_ART, countdown } from './homeUtil'
-import { BakePanel, BreadButton, CropPanel, FeedPanel } from './FarmPanels'
+import { BakePanel, BreadButton, CropPanel, FeedPanel, PayButton } from './FarmPanels'
 import { buildingName, buildingWhat, formatMinutes, levelName, listMaterials, materialAmount, materialName, requirementLabels } from './plotText'
 import { rich } from './rich'
 import { Sheet } from './parts'
@@ -126,9 +130,11 @@ function Building({ b, plot }: { b: BuildingId; plot: PlotState }) {
         </div>
       )}
 
+      {plot.damage?.[b] && !build && <RepairPanel plot={plot} b={b} />}
       {build ? (
         <div className="hp-building">
-          <strong>{t('home.sheet.building', { level: build.toLevel, name: levelName(b, build.toLevel) })}</strong>
+          <strong>{build.repair ? t('home.events.repairTitle', { name: buildingName(b) }) : t('home.sheet.building', { level: build.toLevel, name: levelName(b, build.toLevel) })}</strong>
+          {build.repair && <small>{t('home.events.repairing')}</small>}
           {build.by === 'apprentice' && <small>{t('home.sheet.apprenticeBuilds')}</small>}
           {build.helpMs ? <small>{t('home.sheet.apprenticeHelps')}</small> : null}
           <span className="hp-bar big">
@@ -221,5 +227,34 @@ function ApprenticeButton({ plot, b, now }: { plot: PlotState; b: BuildingId; no
     >
       {cut > 0 ? t('home.sheet.apprenticeHelp', { time: formatMinutes(cut / 60_000) }) : t('home.sheet.apprenticeAway')}
     </button>
+  )
+}
+
+/** A damaged producer makes half until it is mended (shared/src/events.ts): a builder or the Apprentice. */
+function RepairPanel({ plot, b }: { plot: PlotState; b: BuildingId }) {
+  const t = useT()
+  const { repair, say, select } = usePlotStore()
+  const c = checkRepair(plot, b, builderBuilds(plot).length < builderCount(plot.levels), apprenticeFree(plot))
+  return (
+    <div className="hp-row-box hev-repair">
+      <span>
+        {rich(t('home.events.damaged'))}
+        <small>
+          {listMaterials(c.cost)} · {formatMinutes(c.minutes)}
+          {c.byApprentice ? ` · ${t('home.events.repairApprentice')}` : ''}
+        </small>
+      </span>
+      <PayButton
+        cost={c.cost}
+        disabled={!c.ok}
+        label={c.ok ? t('home.events.repair') : t('home.sheet.buildersBusy')}
+        run={async (buyMissing) => {
+          if (await repair(b, buyMissing)) {
+            say(tNow('home.events.repairStarted', { name: buildingName(b) }))
+            select(null)
+          }
+        }}
+      />
+    </div>
   )
 }

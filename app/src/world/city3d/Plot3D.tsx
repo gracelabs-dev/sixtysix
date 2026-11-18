@@ -145,6 +145,7 @@ export default function Plot3D({ levels, plot, now = 0, seen, onSelect, onGift, 
     return (
       <div key={spot} ref={ref} className="c3-tag p3-tag" data-tour={b === 'house' ? 'home-house' : undefined} title={level ? levelName(b, level) : undefined} style={{ display: 'none' }}>
         <div className={`p3-stack ps-tagspot ${b === 'house' ? 'house' : ''} ${level ? '' : 'empty'}`}>
+          {plot?.damage?.[b] && !build && <span className="p3-ribbon raid">🔥 {t('home.scene.damaged')}</span>}
           {isNew && !build && <span className="p3-ribbon new">{t('home.scene.new')}</span>}
           {!isNew && waiting > 0 && (
             <span className="p3-ribbon">
@@ -234,7 +235,7 @@ export default function Plot3D({ levels, plot, now = 0, seen, onSelect, onGift, 
       >
         <DprMonitor bridge={bridge} onDecline={() => setDpr(1)} />
         <DevStats />
-        <PlotScene3D levels={stableLevels} building={building} labels={labels} actors={actors} bridge={bridge} still={still} idleDays={idleDays} crops={crops} sheep={onSheep ? sheep : undefined} />
+        <PlotScene3D levels={stableLevels} building={building} labels={labels} actors={actors} bridge={bridge} still={still} idleDays={idleDays} crops={crops} sheep={onSheep ? sheep : undefined} gate={!!plot?.threat && plot.threat.until > now} />
       </Canvas>
 
       <div className="c3-labels">

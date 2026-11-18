@@ -343,8 +343,13 @@ Phase A and most of Phase B:
 - **Checks:** `shared/scripts/check-progression.mts` (the ladder has no dead
   ends) and `plotsim.py`, now reading its tables from `plot.ts`.
 
+**Release 2 (Phase C, 2026-11-18): events.** One roll a day when the family
+comes, at most one bad event every 3 days.
+- Bad events: the Philistine raid (questions, damaged producers, repairs by
+  builders or the Apprentice), earthquake, drought, locusts and fire.
+- Good events: three visitors (a blessing), a caravan and early rain.
+
 Not done yet:
-- events and the Philistine raid, with the Apprentice's repairs (Phase C);
 - taxes and the tithe (D);
 - jobs and the governor (E);
 - the Temple (F).
