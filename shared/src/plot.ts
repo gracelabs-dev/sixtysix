@@ -13,6 +13,7 @@ import { NO_MODS, SEVEN_YEARS_MS, type PlotMods } from './skills'
 import type { GiftLog } from './life'
 import type { Bake, Crop, Expedition, Glean } from './farm'
 import type { DayCount, Helper } from './homeLife'
+import { AQUEDUCT_WATER, FEAST_BOOST, TEMPLE_FOR_HOUSE, TITHE_BLESSING, taxDue, type CityBoons } from './civic'
 
 export const MATERIALS = ['wood', 'bricks', 'stone', 'wool', 'oil', 'cedar', 'gold', 'barley', 'wheat', 'bread', 'copper', 'wine', 'linen', 'tools', 'honey'] as const
 export type Material = (typeof MATERIALS)[number]
@@ -488,6 +489,16 @@ export interface PlotState {
   caravan?: { material: Material; until: number; left: number }
   /** Early rain: the next sowing yields more. */
   rain?: boolean
+  // The city (shared/src/civic.ts):
+  /** The week (its Monday, ms) the house tax was last paid, and the tithe last brought. */
+  taxWeek?: number
+  titheWeek?: number
+  /** The tithe's blessing: producers +15 % until then. */
+  titheUntil?: number
+  /** Coins' worth this family gave to the Temple (tithes included). */
+  templeGiven?: number
+  /** The city's running boons, set by the server on every load, never stored. */
+  city?: CityBoons
 }
 
 export type EventKind = 'philistines' | 'repelled' | 'quake' | 'drought' | 'locusts' | 'fire' | 'fireOut' | 'visitors' | 'caravan' | 'rain'
@@ -585,6 +596,11 @@ export const waterSupply = (levels: Record<BuildingId, number>, mods: PlotMods =
   const base = levelDef('well', levels.well)?.water ?? 0
   return base ? base + mods.water : 0
 }
+/** The plot's water: its well, and the city's aqueduct while it runs (a well needed). */
+export const waterOf = (s: Pick<PlotState, 'levels' | 'mods' | 'city' | 'updatedAt'>) => {
+  const w = waterSupply(s.levels, modsOf(s))
+  return w && s.city && s.city.aqueductUntil > s.updatedAt ? w + AQUEDUCT_WATER : w
+}
 
 /** Real build time: Many hands takes a share off; Quick hands finishes short builds at once. */
 export function buildMinutes(minutes: number, mods: PlotMods = NO_MODS): number {
@@ -620,13 +636,16 @@ function produce(s: PlotState, from: number, to: number): void {
   const fed = s.fedUntil ? Math.max(0, Math.min(to, s.fedUntil) - from) : 0
   // Events (shared/src/events.ts): the visitors' blessing, a drought.
   const blessed = s.blessUntil ? Math.max(0, Math.min(to, s.blessUntil) - from) : 0
+  // The city (shared/src/civic.ts): a feast for everyone, the family's own tithe.
+  const feast = s.city?.feastUntil ? Math.max(0, Math.min(to, s.city.feastUntil) - from) : 0
+  const tithed = s.titheUntil ? Math.max(0, Math.min(to, s.titheUntil) - from) : 0
   const dry = s.drought ? Math.max(0, Math.min(to, s.drought) - from) * droughtCut(s.levels) : 0
   for (const b of PRODUCERS) {
     const make = levelDef(b, s.levels[b])?.make
     if (!make) continue
     const cur = s.stock[b] ?? 0
     let ms = b === 'fold' ? effMs + 0.5 * fed * (1 + mods.production) : effMs
-    ms += BLESSING * blessed * (1 + mods.production)
+    ms += (BLESSING * blessed + FEAST_BOOST * feast + TITHE_BLESSING * tithed) * (1 + mods.production)
     if (WATER_USERS.includes(b)) ms -= dry * (1 + mods.production)
     if (s.damage?.[b]) ms *= DAMAGED
     s.stock[b] = Math.max(cur, Math.min(cap, cur + (make.perHour * Math.max(0, ms)) / 3_600_000))
@@ -707,6 +726,9 @@ export interface UpgradeCheck {
   missing: Materials
   /** Coins to buy everything missing at the Market. */
   missingCoins: number
+  /** House 11 and 12: the family's gifts to the Temple needed (coins' worth), and the house tax still owed. */
+  temple?: number
+  tax?: number
   /** Coins for the land itself (fields), paid on top. */
   price: number
   waterNeeded: number
@@ -732,16 +754,23 @@ export function checkUpgrade(s: PlotState, b: BuildingId): UpgradeCheck {
   if (WATER_USERS.includes(b)) {
     waterNeeded = (def.water ?? 0) - (levelDef(b, s.levels[b])?.water ?? 0)
     if (waterNeeded > 0) {
-      const free = waterSupply(s.levels, mods) - waterUsed(s)
+      const free = waterOf(s) - waterUsed(s)
       reqs.push({ label: `${waterNeeded} water free (you have ${Math.max(0, free)})`, met: free >= waterNeeded })
     }
   }
+  // The house also needs the family's gifts to the Temple (House 11, 12) and this week's tax paid (shared/src/civic.ts).
+  const temple = b === 'house' ? TEMPLE_FOR_HOUSE[toLevel] : undefined
+  if (temple) reqs.push({ label: `Temple gifts ${temple}`, met: (s.templeGiven ?? 0) >= temple })
+  const tax = b === 'house' ? taxDue(s, s.updatedAt) : 0
+  if (tax) reqs.push({ label: 'House tax paid', met: false })
   const missing: Materials = {}
   for (const m of MATERIALS) {
     const need = (def.cost[m] ?? 0) - s.inventory[m]
     if (need > 0) missing[m] = need
   }
   return {
+    temple,
+    tax,
     building: b,
     toLevel,
     def,
