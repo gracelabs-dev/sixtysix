@@ -43,7 +43,7 @@ export function WorkCard({ plot, now }: { plot: PlotState; now: number }) {
 export function WorkSheet({ plot, now }: { plot: PlotState; now: number }) {
   const t = useT()
   const locale = useLocale((s) => s.locale)
-  const { setWorkOpen, takeJob, startExam, govern, busy, say, error } = usePlotStore()
+  const { setWorkOpen, takeJob, startExam, startShift, govern, busy, say, error } = usePlotStore()
   const username = useAccountStore((s) => s.account?.username ?? '')
   const xp = useGameStore((s) => s.player.xp)
   const coins = useGameStore((s) => s.player.coins)
@@ -67,6 +67,11 @@ export function WorkSheet({ plot, now }: { plot: PlotState; now: number }) {
       <div className="hp-sheet-body work">
         <h3>{t('home.work.title')}</h3>
         <p className="hp-what">{t('home.work.what', { n: SHIFT_QUESTIONS, pay: SHIFT_PAY })}</p>
+        {plot.job && !shiftError(plot, now) && (
+          <button className="hp-btn gold big" disabled={busy} onClick={() => void startShift()}>
+            {t('home.work.shiftGo')} · {t('home.work.shiftReady', { n: SHIFT_QUESTIONS, pay: SHIFT_PAY })}
+          </button>
+        )}
         <ul className="work-jobs">
           {JOB_IDS.map((id) => {
             const mine = plot.job?.id === id

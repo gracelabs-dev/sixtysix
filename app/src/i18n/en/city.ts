@@ -9,8 +9,8 @@ export default {
   },
 
   map: {
-    myHome: 'My home',
-    myHomeTitle: 'Back to my home',
+    myHome: 'My lot',
+    myHomeTitle: 'Show my lot on the map',
     temple: 'Temple',
     templeTitle: 'Back to the Temple',
     zoomIn: 'Zoom in',
@@ -38,6 +38,8 @@ export default {
   },
 
   screen: {
+    openHome: 'My Home',
+    openHomeTitle: 'Build on your own homestead',
     map: '🗺️ Map',
     list: 'List',
     loading: 'Walking up to Jerusalem…',

@@ -438,6 +438,22 @@ export default {
     },
   },
 
+  full: {
+    raid: 'Angriff!',
+    tax: 'Steuer',
+    visitors: 'Besuch',
+    caravan: 'Karawane',
+    tithe: 'Zehnter',
+    weeds: 'Unkraut',
+    collect: 'Einsammeln',
+    harvest: 'Ernte',
+    scroll: '−{n} Min.',
+    work: 'Arbeit',
+    notes: 'Notizen',
+    notesTitle: '📋 Rund um den Hof',
+    storeTitle: 'Dein Vorratshaus, Wasser und Bauleute',
+  },
+
   buildings: {
     house: { name: 'Haus', what: 'Das Herz deines Grundstücks. Jede Hausstufe schaltet die nächste Stufe aller anderen Gebäude frei.' },
     well: { name: 'Brunnen', what: 'Liefert Wasserpunkte. Ziegelofen, Schafstall und Olivenhain verbrauchen welche – vertiefe also den Brunnen, damit sie wachsen können.' },

@@ -438,6 +438,22 @@ export default {
     },
   },
 
+  full: {
+    raid: 'Támadás!',
+    tax: 'Adó',
+    visitors: 'Vendégek',
+    caravan: 'Karaván',
+    tithe: 'Tized',
+    weeds: 'Gaz',
+    collect: 'Begyűjtés',
+    harvest: 'Aratás',
+    scroll: '−{n} perc',
+    work: 'Munka',
+    notes: 'Hírek',
+    notesTitle: '📋 A porta körül',
+    storeTitle: 'A raktárad, a víz és az építők',
+  },
+
   buildings: {
     house: { name: 'Ház', what: 'A telked szíve. Minden házszint feloldja az összes többi épület következő szintjét.' },
     well: { name: 'Kút', what: 'Vízpontokat ad. A téglaégető, az akol és az olajfaliget is fogyaszt belőle, ezért mélyítsd a kutat, hogy fejleszthesd őket.' },

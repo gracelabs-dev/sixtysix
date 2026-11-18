@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   FARM_MATERIALS,
@@ -17,6 +17,11 @@ import {
   DAY_MS,
   seasonAt,
   builderBuilds,
+  taxDue,
+  caravanLeft,
+  titheError,
+  JOB_HOUSE,
+  shiftError,
   builderCount,
   idleStage,
   modsOf,
@@ -34,11 +39,12 @@ import { usePlotStore } from '../../plot/plotStore'
 import { PARCHMENT } from '../../art/textures'
 import { fireConfetti, spring } from '../../motion'
 import { t as tNow, tServer, useT } from '../../i18n'
-import { artFor, useTick } from './homeUtil'
+import { artFor, unseenNews, useTick } from './homeUtil'
 import { buildingName, formatMinutes, levelName, listMaterials, materialName } from './plotText'
 import { rich } from './rich'
 import { BuildingSheet } from './BuildingSheet'
-import { Top, Toast } from './parts'
+import { Sheet, Top, Toast } from './parts'
+import { PaintedCoin } from '../../art/PaintedPortrait'
 import { ScrollSheet } from './ScrollSheet'
 import { PlotView } from '../../world/PlotView'
 import { ExpeditionsView, RoadSheet } from './ExpeditionsView'
@@ -92,6 +98,21 @@ export function HomeScreen() {
     )
   }
 
+  // The homestead fills the screen like a farm game: everything else floats over it (YardFull).
+  if (plot && view === 'yard') {
+    return (
+      <div className="screen tab-screen hp emp hp-full">
+        <YardFull plot={plot} now={now} seen={seen} onBack={() => goTo(lastTab)} onMarket={() => openMarket('home')} />
+        <AnimatePresence>{selected && <BuildingSheet key="sheet" spot={selected} plot={plot} onClose={() => select(null)} />}</AnimatePresence>
+        <AnimatePresence>{scroll && <ScrollSheet key="scroll" />}</AnimatePresence>
+        <AnimatePresence>{templeOpen && <TempleSheet key="temple" plot={plot} />}</AnimatePresence>
+        <AnimatePresence>{workOpen && <WorkSheet key="work" plot={plot} now={now} />}</AnimatePresence>
+        <AnimatePresence>{challenge && <ChallengeSheet key="challenge" />}</AnimatePresence>
+        <Toast />
+      </div>
+    )
+  }
+
   return (
     <div className="screen tab-screen hp emp">
       <div className="tab-bg" />
@@ -106,19 +127,6 @@ export function HomeScreen() {
         <>
           <Summary plot={plot} />
           <Views plot={plot} />
-          {view === 'yard' && (
-            <>
-              <WeedsNote />
-              <EventsPanel plot={plot} now={now} part="actions" />
-              <NextStep plot={plot} />
-              <HomeScene plot={plot} now={now} seen={seen} />
-              {/* Under the scene, so the homestead stays high on the screen. */}
-              <RoundNotes plot={plot} now={now} />
-              <EventsPanel plot={plot} now={now} part="status" />
-              {plot.levels.field1 > 0 && <Season now={now} />}
-              <Actions plot={plot} now={now} />
-            </>
-          )}
           {view === 'expeditions' && <ExpeditionsView plot={plot} now={now} />}
           <p className="tab-note hp-foot">{t(view === 'expeditions' ? 'home.exp.foot' : 'home.foot')}</p>
         </>
@@ -296,48 +304,142 @@ function HomeScene({ plot, now, seen }: { plot: PlotState; now: number; seen: Re
   )
 }
 
-function Actions({ plot, now }: { plot: PlotState; now: number }) {
-  const { busy, collect, startScroll, say, error, harvest } = usePlotStore()
-  // The fields are part of the scene: ripe grain is brought in from here too.
+
+/**
+ * The homestead full screen, as in a farm game: the 3D yard under everything;
+ * on top the back button, a status pill (tap: the storehouse) and the Market;
+ * the Homestead / Expeditions switch; on the left what asks for a decision,
+ * on the right the everyday actions; the next step at the bottom. Dragging on
+ * the yard only ever moves the camera.
+ */
+function YardFull({ plot, now, seen, onBack, onMarket }: { plot: PlotState; now: number; seen: Record<BuildingId, number> | null; onBack: () => void; onMarket: () => void }) {
+  const t = useT()
+  const [info, setInfo] = useState<'store' | 'events' | 'notes' | null>(null)
+  const { busy, collect, startScroll, say, harvest, setWorkOpen, home, error } = usePlotStore()
+  const coins = useGameStore((s) => s.player.coins)
   const ripe = ripeFields(plot, now)
   const grain = ripe.reduce((n, f) => n + (plot.crops?.[f]?.amount ?? 0), 0)
-  const t = useT()
-  // Production waiting, and baked bread to take out.
-  const bread = plot.bake && plot.bake.endsAt <= usePlotStore.getState().now() ? plot.bake.bread : 0
+  const bread = plot.bake && plot.bake.endsAt <= now ? plot.bake.bread : 0
   const waiting = PRODUCERS.reduce((n, b) => n + ready(plot, b), 0) + bread
-  const cut = modsOf(plot).scrollMin
+  const mods = modsOf(plot)
+  const apprenticeBusy = plot.builds.some((b) => b.by === 'apprentice' || b.helpMs)
+  const weeds = home ? idleStage(home.idleDays) : 0
+  // What asks for a decision (left), each opening the cards in one sheet.
+  const alerts = [
+    plot.threat && plot.threat.until > now ? { icon: '⚔️', label: t('home.full.raid'), alarm: true } : null,
+    taxDue(plot, now) ? { icon: '🪙', label: t('home.full.tax') } : null,
+    plot.visitors && plot.visitors > now ? { icon: '👣', label: t('home.full.visitors') } : null,
+    caravanLeft(plot, now) ? { icon: '🐪', label: t('home.full.caravan') } : null,
+    !titheError(plot, now) ? { icon: '🙏', label: t('home.full.tithe') } : null,
+  ].filter((a): a is { icon: string; label: string; alarm?: boolean } => !!a)
+  const shift = plot.levels.house >= JOB_HOUSE && (!plot.job || !shiftError(plot, now))
+  const notes = unseenNews(plot) + raidedFields(plot, now).length + (weeds ? 1 : 0)
   return (
-    <div className="hp-actions">
-      {error && <p className="hp-error">{tServer(error)}</p>}
-      <button
-        className="hp-btn gold"
-        data-tour="home-collect"
-        disabled={busy || waiting === 0}
-        onClick={async () => {
-          const got = await collect()
-          if (got && Object.keys(got).length) say(tNow('home.collected', { list: listMaterials(got) }))
-        }}
-      >
-        {waiting ? t('home.actions.collectAllN', { n: waiting }) : t('home.actions.collectAll')}
-      </button>
-      {ripe.length > 0 && (
+    <>
+      <HomeScene plot={plot} now={now} seen={seen} />
+      <div className="hpf-top">
+        <button className="icon-btn" onClick={onBack} title={t('home.back')}>
+          ←
+        </button>
+        <button className="hpf-hud" onClick={() => setInfo('store')} title={t('home.full.storeTitle')}>
+          <span>
+            <PaintedCoin size={16} /> {coins.toLocaleString()}
+          </span>
+          <span>💧 {waterUsed(plot)}/{waterOf(plot)}</span>
+          <span>🔨 {builderBuilds(plot).length}/{builderCount(plot.levels)}</span>
+          {mods.apprentice && <span>👷 {apprenticeBusy ? '…' : '✓'}</span>}
+        </button>
+        <button className="icon-btn" onClick={onMarket} title={t('home.market')} data-tour="home-market">
+          ⚖️
+        </button>
+      </div>
+      <Views plot={plot} />
+      <div className="hpf-side left">
+        {alerts.map((a) => (
+          <button key={a.icon} className={`hpf-fab ${a.alarm ? 'alarm' : ''}`} onClick={() => setInfo('events')}>
+            <span>{a.icon}</span>
+            <small>{a.label}</small>
+          </button>
+        ))}
+        {weeds > 0 && (
+          <button className="hpf-fab warn" onClick={() => setInfo('notes')}>
+            <span>🌿</span>
+            <small>{t('home.full.weeds')}</small>
+          </button>
+        )}
+      </div>
+      <div className="hpf-side right">
         <button
-          className="hp-btn gold"
-          disabled={busy}
+          className="hpf-fab gold"
+          data-tour="home-collect"
+          disabled={busy || waiting === 0}
           onClick={async () => {
-            const got = await harvest()
-            if (got) {
-              say(tNow('home.farm.harvested', { list: listMaterials(got) }))
-              fireConfetti({ y: 0.5, count: 60 })
-            }
+            const got = await collect()
+            if (got && Object.keys(got).length) say(tNow('home.collected', { list: listMaterials(got) }))
           }}
         >
-          {t('home.farm.harvestAll', { n: grain })}
+          <span>🧺</span>
+          {waiting > 0 && <b className="hpf-badge">{waiting}</b>}
+          <small>{t('home.full.collect')}</small>
         </button>
-      )}
-      <button className="hp-btn" data-tour="home-scroll" disabled={busy || plot.builds.length === 0} onClick={() => void startScroll()} title={t('home.actions.scrollTitle', { n: cut })}>
-        {t('home.actions.scroll')} <small>{t('home.actions.scrollCut', { n: cut })}</small>
-      </button>
-    </div>
+        {ripe.length > 0 && (
+          <button
+            className="hpf-fab gold"
+            disabled={busy}
+            onClick={async () => {
+              const got = await harvest()
+              if (got) {
+                say(tNow('home.farm.harvested', { list: listMaterials(got) }))
+                fireConfetti({ y: 0.5, count: 60 })
+              }
+            }}
+          >
+            <span>🌾</span>
+            <b className="hpf-badge">{grain}</b>
+            <small>{t('home.full.harvest')}</small>
+          </button>
+        )}
+        <button className="hpf-fab" data-tour="home-scroll" disabled={busy || plot.builds.length === 0} onClick={() => void startScroll()} title={t('home.actions.scrollTitle', { n: mods.scrollMin })}>
+          <span>📜</span>
+          <small>{t('home.full.scroll', { n: mods.scrollMin })}</small>
+        </button>
+        {plot.levels.house >= JOB_HOUSE && (
+          <button className="hpf-fab" onClick={() => setWorkOpen(true)}>
+            <span>🏛️</span>
+            {shift && <b className="hpf-badge dot">!</b>}
+            <small>{t('home.full.work')}</small>
+          </button>
+        )}
+        <button className="hpf-fab" onClick={() => setInfo('notes')}>
+          <span>📋</span>
+          {notes > 0 && <b className="hpf-badge">{notes}</b>}
+          <small>{t('home.full.notes')}</small>
+        </button>
+      </div>
+      <div className="hpf-bottom">
+        {error && <p className="hp-error">{tServer(error)}</p>}
+        <NextStep plot={plot} />
+      </div>
+      <AnimatePresence>
+        {info && (
+          <Sheet key={info} closeTitle={t('home.close')} onClose={() => setInfo(null)}>
+            <div className="hp-sheet-body hpf-info">
+              {info === 'store' && <Summary plot={plot} />}
+              {info === 'events' && <EventsPanel plot={plot} now={now} part="actions" />}
+              {info === 'notes' && (
+                <>
+                  <h3>{t('home.full.notesTitle')}</h3>
+                  <WeedsNote />
+                  <RoundNotes plot={plot} now={now} />
+                  {plot.levels.field1 > 0 && <Season now={now} />}
+                  <EventsPanel plot={plot} now={now} part="status" />
+                  <p className="tab-note hp-foot">{t('home.foot')}</p>
+                </>
+              )}
+            </div>
+          </Sheet>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

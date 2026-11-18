@@ -5,7 +5,7 @@ import { useGameStore } from '../../game/store'
 import { PaintedCoin } from '../../art/PaintedPortrait'
 import { fireConfetti } from '../../motion'
 import { t as tNow, useT } from '../../i18n'
-import { countdown } from './homeUtil'
+import { countdown, loadSeenNews as loadSeen, saveSeenNews } from './homeUtil'
 import { PayButton } from './FarmPanels'
 import { WorkCard } from './WorkSheet'
 import { buildingName, listMaterials, materialName } from './plotText'
@@ -16,14 +16,6 @@ import { buildingName, listMaterials, materialName } from './plotText'
  * the news of the last days (each dismissed once, on this device).
  */
 
-const SEEN_KEY = 'sixtysix.homeNews.v1'
-function loadSeen(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]') as string[]
-  } catch {
-    return []
-  }
-}
 
 /** `actions` (above the scene): what asks for a choice now. `status` (below it): work, the city, what runs, the news. */
 export function EventsPanel({ plot, now, part }: { plot: PlotState; now: number; part: 'actions' | 'status' }) {
@@ -35,11 +27,7 @@ export function EventsPanel({ plot, now, part }: { plot: PlotState; now: number;
   const dismiss = (id: string) => {
     const next = [id, ...seen].slice(0, 40)
     setSeen(next)
-    try {
-      localStorage.setItem(SEEN_KEY, JSON.stringify(next))
-    } catch {
-      // Private mode: it shows again next time.
-    }
+    saveSeenNews(next)
   }
   const threat = plot.threat && plot.threat.until > now ? plot.threat : undefined
   const visitors = plot.visitors && plot.visitors > now

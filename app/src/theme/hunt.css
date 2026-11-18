@@ -1,9 +1,11 @@
 /* The scroll hunt over the Jerusalem map (app/src/hunt/). */
 
 /* The chips at the map's lower left, above the found family's card: scroll hunt, duels. (Three classes: .tab-screen makes its children relative.) */
-.tab-screen.jr-map > .cx-side{ position: absolute; left: 10px; bottom: 82px; z-index: 2; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; pointer-events: none; }
+/* Floating on the left under the top bar, clear of the tab bar at the bottom. */
+.tab-screen.jr-map > .cx-side{ position: absolute; left: 10px; top: calc(66px + env(safe-area-inset-top)); z-index: 2; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; pointer-events: none; }
 .cx-side > *{ pointer-events: auto; }
-.cx-side .cm-chip{ height: 36px; padding: 0 11px; font-size: 15px; }
+.cx-side .cm-chip{ height: 40px; padding: 0 12px; font-size: 16px; box-shadow: 0 3px 8px rgb(0 0 0 / 0.45); }
+.cx-side .cx-home{ height: 46px; font-size: 17px; }
 .cx-side .cm-chip b{ font: 900 13px/1 'Cinzel', serif; color: #ffe08a; }
 .hx-chip.done b{ color: #9fe08a; }
 .cx-count{
@@ -80,3 +82,5 @@
 .hx-stop{ flex: none; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #8a5a2a; background: rgb(255 255 255 / 0.5); color: #3a2410; font-weight: 900; cursor: pointer; }
 @media (min-width: 700px){ .tab-screen.jr-map > .hx-seeking{ left: 50%; right: auto; width: 440px; translate: -50% 0; } }
 .tab-screen.jr-map > .hx-seeking ~ .hx-note{ top: 170px; }
+/* While a riddle is searched for, its strip takes the top: the side buttons move below it. */
+.tab-screen.jr-map:has(> .hx-seeking) > .cx-side{ top: 190px; }

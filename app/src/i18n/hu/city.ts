@@ -8,8 +8,8 @@ export default {
   },
 
   map: {
-    myHome: 'Otthonom',
-    myHomeTitle: 'Vissza az otthonomhoz',
+    myHome: 'Telkem',
+    myHomeTitle: 'A telkem megmutatása a térképen',
     temple: 'Templom',
     templeTitle: 'Vissza a templomhoz',
     zoomIn: 'Nagyítás',
@@ -37,6 +37,8 @@ export default {
   },
 
   screen: {
+    openHome: 'Otthonom',
+    openHomeTitle: 'Építs a saját portádon',
     map: '🗺️ Térkép',
     list: 'Lista',
     loading: 'Úton felfelé Jeruzsálembe…',
