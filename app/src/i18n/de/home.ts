@@ -439,6 +439,8 @@ export default {
   },
 
   full: {
+    idea: 'Idee',
+    ideaTitle: 'Ein Vorschlag, was du als Nächstes bauen könntest',
     raid: 'Angriff!',
     tax: 'Steuer',
     visitors: 'Besuch',

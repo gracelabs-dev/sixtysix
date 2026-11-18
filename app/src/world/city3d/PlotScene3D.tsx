@@ -387,7 +387,16 @@ export const PlotScene3D = memo(function PlotScene3D({ levels, building, labels,
     if (!c) return
     bridge.controls = c
     bridge.invalidate = invalidate
-    configureRig(c, { minDist: PLOT_MIN_DIST, maxDist, minPolar: 0.2, maxPolar: 1.18, boundary: [new Vector3(...PLOT_BOUNDS[0]), new Vector3(...PLOT_BOUNDS[1])] })
+    configureRig(c, {
+      minDist: PLOT_MIN_DIST,
+      maxDist,
+      minPolar: 0.2,
+      maxPolar: 1.18,
+      boundary: [new Vector3(...PLOT_BOUNDS[0]), new Vector3(...PLOT_BOUNDS[1])],
+      // A farm game's fixed view: it never turns or tilts, so the yard always reads the same way.
+      fixed: { azimuth: 0, polar: PLOT_START_POLAR },
+    })
+    bridge.fixedView = true
     return () => {
       bridge.controls = null
     }

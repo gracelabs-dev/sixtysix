@@ -439,6 +439,8 @@ export default {
   },
 
   full: {
+    idea: 'Ötlet',
+    ideaTitle: 'Javaslat, mit építs legközelebb',
     raid: 'Támadás!',
     tax: 'Adó',
     visitors: 'Vendégek',
