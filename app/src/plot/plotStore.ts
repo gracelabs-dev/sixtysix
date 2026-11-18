@@ -10,6 +10,7 @@ import {
   type GiftFigure,
   type Material,
   type Materials,
+  type News,
   type PlotState,
   type ScrollQuestion,
   type StallLot,
@@ -87,13 +88,14 @@ export interface ScrollRound {
 
 /** Raiders in a field, or a hand lent to a neighbour: the questions, then how they went (shared/src/homeLife.ts). */
 export interface Challenge {
-  kind: 'raid' | 'help'
+  /** Raiders in a field, a hand lent, or the Philistines at the gate (shared/src/events.ts). */
+  kind: 'raid' | 'help' | 'threat'
   id: string
   /** The raided field, or the neighbour's username. */
   field?: FieldId
   username?: string
   questions: ScrollQuestion[]
-  result?: { right: number; correct: number[]; lost?: number; collected?: Materials; cutMs?: number; building?: BuildingId }
+  result?: { right: number; correct: number[]; lost?: number; collected?: Materials; cutMs?: number; building?: BuildingId; news?: News }
 }
 
 /** A team about to set out: its road questions, then how they went. */
@@ -163,6 +165,11 @@ interface PlotStore {
   challenge: Challenge | null
   startRaid: (field: FieldId) => Promise<void>
   startHelp: (username: string) => Promise<string | null>
+  startThreat: () => Promise<void>
+  /** Events (shared/src/events.ts): mend a damaged building, welcome the visitors, buy from the caravan. */
+  repair: (b: BuildingId, buyMissing: boolean) => Promise<boolean>
+  welcomeVisitors: (buyMissing: boolean) => Promise<boolean>
+  buyCaravan: (qty: number) => Promise<boolean>
   answerChallenge: (answers: number[]) => Promise<boolean>
   closeChallenge: () => void
   /** The lost sheep, found. */
@@ -366,10 +373,36 @@ export const usePlotStore = create<PlotStore>((set, get) => {
       return null
     },
 
+    startThreat: async () => {
+      set({ busy: true })
+      const res = take(await call<{ threatId: string; questions: ScrollQuestion[] }>('/threat', { locale: useLocale.getState().locale }))
+      if (res) set({ challenge: { kind: 'threat', id: res.threatId, questions: res.questions }, selected: null })
+    },
+
+    repair: async (building, buyMissing) => {
+      set({ busy: true })
+      return !!take(await call('/repair', { building, buyMissing }))
+    },
+
+    welcomeVisitors: async (buyMissing) => {
+      set({ busy: true })
+      return !!take(await call('/visitors', { buyMissing }))
+    },
+
+    buyCaravan: async (qty) => {
+      set({ busy: true })
+      return !!take(await call('/caravan', { qty }))
+    },
+
     answerChallenge: async (answers) => {
       const ch = get().challenge
       if (!ch) return false
       set({ busy: true })
+      if (ch.kind === 'threat') {
+        const r = take(await call<{ right: number; correct: number[]; news: News }>('/threat/answer', { threatId: ch.id, answers }))
+        if (r) set({ challenge: { ...ch, result: { right: r.right, correct: r.correct, news: r.news } } })
+        return !!r
+      }
       const res = take(
         ch.kind === 'raid'
           ? await call<{ right: number; correct: number[]; lost: number; collected: Materials }>('/raid/answer', { raidId: ch.id, answers })

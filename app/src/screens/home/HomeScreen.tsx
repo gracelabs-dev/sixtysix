@@ -43,6 +43,7 @@ import { ScrollSheet } from './ScrollSheet'
 import { PlotView } from '../../world/PlotView'
 import { ExpeditionsView, RoadSheet } from './ExpeditionsView'
 import { ChallengeSheet } from './LifeSheets'
+import { EventsPanel } from './Events'
 import { SHEEP_PLACES } from '../../world/sheepPlaces'
 import { useIntro } from '../../tutorial/useIntro'
 
@@ -106,6 +107,7 @@ export function HomeScreen() {
           {view === 'yard' && (
             <>
               <WeedsNote />
+              <EventsPanel plot={plot} now={now} />
               <NextStep plot={plot} />
               <HomeScene plot={plot} now={now} seen={seen} />
               {/* Under the scene, so the homestead stays high on the screen. */}

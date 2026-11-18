@@ -11,7 +11,23 @@ import {
   SPEEDUP_MAX_SHARE,
   SCROLL_COOLDOWN_MS,
   apprenticeCut,
+  apprenticeFree,
+  builderBuilds,
+  builderCount,
   buildFullMs,
+  caravanLeft,
+  caravanPrice,
+  checkRepair,
+  resolveThreat,
+  rollEvents,
+  visitorsError,
+  welcomeVisitors,
+  THREAT_BOOK,
+  THREAT_QUESTIONS,
+  VISITORS_BREAD,
+  BUILDING_IDS as ALL_BUILDINGS,
+  type EventKind,
+  type News,
   sell,
   WEEKLY_CEDAR,
   advance,
@@ -141,6 +157,7 @@ export function parsePlot(raw: string, now: number): PlotState {
       ...(x.spedMs ? { spedMs: num(x.spedMs) } : {}),
       ...(x.helpMs ? { helpMs: num(x.helpMs) } : {}),
       ...(x.by === 'apprentice' ? { by: 'apprentice' as const } : {}),
+      ...(x.repair === true ? { repair: true } : {}),
     }))
   base.updatedAt = num(p.updatedAt, now)
   if (p.boostUntil !== undefined) base.boostUntil = num(p.boostUntil)
@@ -171,6 +188,37 @@ export function parsePlot(raw: string, now: number): PlotState {
       return [team]
     })
   }
+  // What happened to the homestead (shared/src/events.ts).
+  const ev = obj(p.events)
+  if (ev) {
+    const kinds: EventKind[] = ['philistines', 'repelled', 'quake', 'drought', 'locusts', 'fire', 'fireOut', 'visitors', 'caravan', 'rain']
+    const news = (Array.isArray(ev.news) ? ev.news : []).flatMap((n): News[] => {
+      const o = obj(n)
+      if (!o || !kinds.includes(o.kind as EventKind) || !num(o.at)) return []
+      const item: News = { id: String(o.id ?? `${o.kind}-${o.at}`).slice(0, 40), kind: o.kind as EventKind, at: num(o.at) }
+      if (o.lost) item.lost = materials(o.lost)
+      if (Array.isArray(o.hits)) item.hits = o.hits.filter((b): b is BuildingId => ALL_BUILDINGS.includes(b))
+      if (ALL_BUILDINGS.includes(o.building as BuildingId)) item.building = o.building as BuildingId
+      if (FIELD_IDS.includes(o.field as FieldId)) item.field = o.field as FieldId
+      if (MATERIALS.includes(o.material as Material)) item.material = o.material as Material
+      if (o.right !== undefined) item.right = Math.floor(num(o.right))
+      return [item]
+    })
+    base.events = { day: Math.floor(num(ev.day)), lastBad: num(ev.lastBad), news: news.slice(0, 8) }
+  }
+  const dmg = obj(p.damage)
+  if (dmg) {
+    base.damage = {}
+    for (const b of BUILDING_IDS) if (num(dmg[b])) base.damage[b] = num(dmg[b])
+  }
+  const th = obj(p.threat)
+  if (th && num(th.until)) base.threat = { at: num(th.at), until: num(th.until), loot: materials(th.loot), hits: (Array.isArray(th.hits) ? th.hits : []).filter((b): b is BuildingId => BUILDING_IDS.includes(b)) }
+  if (num(p.drought)) base.drought = num(p.drought)
+  if (num(p.visitors)) base.visitors = num(p.visitors)
+  if (num(p.blessUntil)) base.blessUntil = num(p.blessUntil)
+  const car = obj(p.caravan)
+  if (car && MATERIALS.includes(car.material as Material) && num(car.until)) base.caravan = { material: car.material as Material, until: num(car.until), left: Math.floor(num(car.left)) }
+  if (p.rain === true) base.rain = true
   const sold = obj(p.sold)
   if (sold) base.sold = { day: Math.floor(num(sold.day)), n: materials(sold.n) }
   base.glean = parseGlean(p.glean)
@@ -219,7 +267,9 @@ function load(req: FastifyRequest): Ctx | undefined {
   // The valley opened: homesteads already at House 3 get Field 1 cleared and sown, once.
   const had = plot.fieldGift
   giveFirstField(plot, now)
-  if (plot.fieldGift !== had) savePlot(ctx)
+  // The day's event (shared/src/events.ts): rolled when the family comes, so nobody returns to a ruin.
+  const rolled = rollEvents(plot, now)
+  if (plot.fieldGift !== had || rolled) savePlot(ctx)
   return ctx
 }
 
@@ -316,6 +366,14 @@ interface PendingHelp {
   expiresAt: number
 }
 const helps = new Map<number, PendingHelp>()
+/** Philistines at the gate: their questions (one open set per player). */
+interface PendingThreat {
+  id: string
+  questions: ScrollQuestion[]
+  correct: number[]
+  expiresAt: number
+}
+const threats = new Map<number, PendingThreat>()
 
 /** Questions from the bank as sent to a player: answers shuffled, no bank ids. */
 function asked(qs: ReturnType<typeof pickQuestions>, locale: ReturnType<typeof cleanLocale>) {
@@ -499,6 +557,77 @@ export function registerPlotRoutes(app: FastifyInstance): void {
     advance(c.plot, c.now)
     save(c)
     return view(c, { building: build.building, cutMs: cut })
+  })
+
+  // ── What happens to the homestead (shared/src/events.ts) ──────────────
+
+  /** Mend a damaged building: { building, buyMissing? }. A builder, or the Apprentice whatever its length. */
+  route(app, 'post', '/api/plot/repair', (c, body) => {
+    const b = asBuilding(body.building)
+    if (!b || !c.plot.damage?.[b]) return fail('Nothing to repair there')
+    const check = checkRepair(c.plot, b, builderBuilds(c.plot).length < builderCount(c.plot.levels), apprenticeFree(c.plot))
+    if (check.busy) return fail('Already being built')
+    if (!check.ok) return fail('Your builders are all busy')
+    const paid = buyShort(c, check.cost, body.buyMissing === true)
+    if (paid !== 'ok') return shortError(paid)
+    for (const m of MATERIALS) c.plot.inventory[m] -= check.cost[m] ?? 0
+    c.plot.builds.push({ building: b, toLevel: c.plot.levels[b], startedAt: c.now, endsAt: c.now + check.minutes * 60_000, repair: true, ...(check.byApprentice ? { by: 'apprentice' as const } : {}) })
+    advance(c.plot, c.now)
+    save(c)
+    return view(c)
+  })
+
+  /** Philistines at the gate, step 1: { locale } → three questions from 1 Samuel. */
+  route(app, 'post', '/api/plot/threat', (c, body) => {
+    if (!c.plot.threat) return fail('Nobody is at the gate')
+    const open = threats.get(c.row.id)
+    if (open && open.expiresAt > c.now) return view(c, { threatId: open.id, questions: open.questions })
+    const qs = pickQuestions(THREAT_QUESTIONS, { difficulty: 'mixed', book: THREAT_BOOK })
+    const all = qs.length < THREAT_QUESTIONS ? pickQuestions(THREAT_QUESTIONS, { difficulty: 'mixed' }) : qs
+    if (all.length < THREAT_QUESTIONS) return fail('No questions available')
+    const { questions, correct } = asked(all, cleanLocale(body.locale))
+    const pending: PendingThreat = { id: randomBytes(9).toString('base64url'), questions, correct, expiresAt: c.now + SCROLL_TTL_MS }
+    threats.set(c.row.id, pending)
+    return view(c, { threatId: pending.id, questions })
+  })
+
+  /** Step 2: { threatId, answers (−1 = skipped) } → they leave with what the answers didn't save. */
+  route(app, 'post', '/api/plot/threat/answer', (c, body) => {
+    const pending = threats.get(c.row.id)
+    if (!pending || pending.id !== body.threatId || pending.expiresAt < c.now) return fail('These questions have expired')
+    const answers = Array.isArray(body.answers) ? body.answers : []
+    if (answers.length !== THREAT_QUESTIONS || !answers.every((a) => Number.isInteger(a) && a >= -1 && a <= 3)) return fail('Answer all three questions')
+    if (!c.plot.threat) return fail('Nobody is at the gate')
+    threats.delete(c.row.id)
+    const right = pending.correct.filter((ci, i) => answers[i] === ci).length
+    const news = resolveThreat(c.plot, right, c.now)
+    savePlot(c)
+    return view(c, { right, correct: pending.correct, news })
+  })
+
+  /** Offer the three visitors bread ({ buyMissing? }): a day's blessing. */
+  route(app, 'post', '/api/plot/visitors', (c, body) => {
+    if (visitorsError(c.plot, c.now) === 'none') return fail('The visitors have gone on')
+    const paid = buyShort(c, { bread: VISITORS_BREAD }, body.buyMissing === true)
+    if (paid !== 'ok') return shortError(paid)
+    welcomeVisitors(c.plot, c.now)
+    save(c)
+    return view(c)
+  })
+
+  /** Buy from the merchant caravan at half price: { qty }. */
+  route(app, 'post', '/api/plot/caravan', (c, body) => {
+    const qty = asQty(body.qty)
+    const left = caravanLeft(c.plot, c.now)
+    if (!left || !c.plot.caravan) return fail('The caravan has moved on')
+    if (!qty || qty > left) return fail('Unknown material or amount')
+    const price = caravanPrice(c.plot.caravan.material, qty)
+    if (c.profile.coins < price) return fail('Not enough coins')
+    c.profile.coins -= price
+    c.plot.inventory[c.plot.caravan.material] += qty
+    c.plot.caravan.left -= qty
+    save(c)
+    return view(c)
   })
 
   /** Collect one producer (`building`) or all of them. */

@@ -427,6 +427,8 @@ export interface Build {
   by?: 'apprentice'
   /** Time the Apprentice took off by helping (outside the speed-up cap). */
   helpMs?: number
+  /** A repair of damage (shared/src/events.ts), not a new level: `toLevel` is the level it has. */
+  repair?: boolean
 }
 
 /** A build's full length before anything was taken off. */
@@ -469,7 +471,54 @@ export interface PlotState {
   helpers?: Helper[]
   /** Sold at the Market today (the flooded market): UTC day number and units per material. */
   sold?: { day: number; n: Materials }
+  // What happens to the homestead (shared/src/events.ts):
+  /** The day's roll, the last bad event, and what happened lately. */
+  events?: { day: number; lastBad: number; news: News[] }
+  /** Damaged producers make half until repaired: building → when it was damaged. */
+  damage?: Partial<Record<BuildingId, number>>
+  /** Philistines at the gate, waiting to be driven off (or until `until`, when they take everything they came for). */
+  threat?: Threat
+  /** Drought until then: producers that use water make less, crops sown then yield less. */
+  drought?: number
+  /** Three visitors wait at the door until then (offer bread for a blessing). */
+  visitors?: number
+  /** The visitors' blessing: producers +25 % until then. */
+  blessUntil?: number
+  /** A merchant caravan sells one material at half price until `until`. */
+  caravan?: { material: Material; until: number; left: number }
+  /** Early rain: the next sowing yields more. */
+  rain?: boolean
 }
+
+export type EventKind = 'philistines' | 'repelled' | 'quake' | 'drought' | 'locusts' | 'fire' | 'fireOut' | 'visitors' | 'caravan' | 'rain'
+/** One thing that happened, for the news on My Home. */
+export interface News {
+  id: string
+  kind: EventKind
+  at: number
+  /** Taken (raid), burnt (fire), eaten (locusts). */
+  lost?: Materials
+  /** Damaged buildings (raid, earthquake). */
+  hits?: BuildingId[]
+  building?: BuildingId
+  field?: FieldId
+  material?: Material
+  /** Raid: questions answered right. */
+  right?: number
+}
+export interface Threat {
+  at: number
+  until: number
+  /** What they came for, and the buildings they would wreck. */
+  loot: Materials
+  hits: BuildingId[]
+}
+
+/** Drought: the share producers that use water lose (a deeper well holds out). */
+export const droughtCut = (levels: Record<BuildingId, number>) => (levels.well >= 7 ? 0 : levels.well >= 5 ? 0.125 : 0.25)
+/** The visitors' blessing and a damaged building's share of production. */
+export const BLESSING = 0.25
+export const DAMAGED = 0.5
 
 export const modsOf = (s: Pick<PlotState, 'mods'>): PlotMods => s.mods ?? NO_MODS
 
@@ -569,12 +618,18 @@ function produce(s: PlotState, from: number, to: number): void {
   const effMs = (ms + 0.5 * boosted) * (1 + mods.production)
   // Fed with barley: the sheepfold's fed part of this segment counts 1.5× as well.
   const fed = s.fedUntil ? Math.max(0, Math.min(to, s.fedUntil) - from) : 0
+  // Events (shared/src/events.ts): the visitors' blessing, a drought.
+  const blessed = s.blessUntil ? Math.max(0, Math.min(to, s.blessUntil) - from) : 0
+  const dry = s.drought ? Math.max(0, Math.min(to, s.drought) - from) * droughtCut(s.levels) : 0
   for (const b of PRODUCERS) {
     const make = levelDef(b, s.levels[b])?.make
     if (!make) continue
     const cur = s.stock[b] ?? 0
-    const ms = b === 'fold' ? effMs + 0.5 * fed * (1 + mods.production) : effMs
-    s.stock[b] = Math.max(cur, Math.min(cap, cur + (make.perHour * ms) / 3_600_000))
+    let ms = b === 'fold' ? effMs + 0.5 * fed * (1 + mods.production) : effMs
+    ms += BLESSING * blessed * (1 + mods.production)
+    if (WATER_USERS.includes(b)) ms -= dry * (1 + mods.production)
+    if (s.damage?.[b]) ms *= DAMAGED
+    s.stock[b] = Math.max(cur, Math.min(cap, cur + (make.perHour * Math.max(0, ms)) / 3_600_000))
   }
 }
 
@@ -598,6 +653,8 @@ export function advance(s: PlotState, now: number): void {
     if (!next) break
     if (s.levels[next.building] < next.toLevel) finished(s, next.building, next.toLevel)
     s.levels[next.building] = Math.max(s.levels[next.building], next.toLevel)
+    // A repair, or a new level, mends what the raiders or the earthquake broke.
+    if (s.damage?.[next.building]) delete s.damage[next.building]
     if (next.building === 'house' && modsOf(s).sevenYears) s.boostUntil = next.endsAt + SEVEN_YEARS_MS
     s.builds = s.builds.filter((x) => x !== next)
   }

@@ -35,7 +35,7 @@ import { rich } from './rich'
  */
 
 /** A button that does `run` with the materials, or buys what's missing first (showing the coins). */
-function PayButton({ cost, label, disabled, run, className = 'hp-btn small gold' }: { cost: Materials; label: string; disabled?: boolean; run: (buyMissing: boolean) => Promise<unknown>; className?: string }) {
+export function PayButton({ cost, label, disabled, run, className = 'hp-btn small gold' }: { cost: Materials; label: string; disabled?: boolean; run: (buyMissing: boolean) => Promise<unknown>; className?: string }) {
   const plot = usePlotStore((s) => s.plot)
   const busy = usePlotStore((s) => s.busy)
   const locale = useLocale((s) => s.locale)
