@@ -18,16 +18,16 @@ export const FIELD_D = 9
 
 /** Each bed's centre, in unlock order: nearest the gate first, left before right. */
 export const FIELD_3D: Record<FieldId, { x: number; z: number }> = {
-  field1: { x: -13.5, z: 34 },
-  field2: { x: 13.5, z: 34 },
-  field3: { x: -28.5, z: 34 },
-  field4: { x: 28.5, z: 34 },
-  field5: { x: -13.5, z: 45.5 },
-  field6: { x: 13.5, z: 45.5 },
+  field1: { x: -13.5, z: 48 },
+  field2: { x: 13.5, z: 48 },
+  field3: { x: -28.5, z: 48 },
+  field4: { x: 28.5, z: 48 },
+  field5: { x: -13.5, z: 59.5 },
+  field6: { x: 13.5, z: 59.5 },
 }
 
 /** The threshing floor, at the end of the lane between the far beds. */
-export const THRESH_3D = { x: 0, z: 45.5 }
+export const THRESH_3D = { x: 0, z: 59.5 }
 export const THRESH_R = 4.5
 
 /** Is (x, z) on a bed or the floor (with `pad` round them)? Trees, bushes and grass keep off. */

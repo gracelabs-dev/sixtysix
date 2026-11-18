@@ -153,6 +153,8 @@ interface PlotStore {
   bake: (grain: CropId, amount: number, buyMissing: boolean) => Promise<boolean>
   feedFold: (buyMissing: boolean) => Promise<boolean>
   feedBuilders: (b: BuildingId, buyMissing: boolean) => Promise<number | null>
+  /** The Apprentice helps the builders on `b`; resolves to the time taken off. */
+  helpBuild: (b: BuildingId) => Promise<number | null>
   /** Road questions for a team; then `setOut` with the answers (−1 = skipped). */
   startRoad: (dest: DestinationId, workers: number, trip?: TripId) => Promise<boolean>
   setOut: (answers: number[], buyMissing: boolean) => Promise<boolean>
@@ -323,6 +325,12 @@ export const usePlotStore = create<PlotStore>((set, get) => {
     feedBuilders: async (building, buyMissing) => {
       set({ busy: true })
       const res = take(await call<{ cutMs: number }>('/feed', { target: 'build', building, buyMissing }))
+      return res ? res.cutMs : null
+    },
+
+    helpBuild: async (building) => {
+      set({ busy: true })
+      const res = take(await call<{ cutMs: number }>('/apprentice', { building }))
       return res ? res.cutMs : null
     },
 

@@ -9,7 +9,9 @@
 import {
   MATERIAL_INFO,
   MATERIALS,
+  LATE_MATERIALS,
   SPEEDUP_MAX_SHARE,
+  buildFullMs,
   coinValue,
   levelDef,
   modsOf,
@@ -205,7 +207,7 @@ export const BREAD_SHARE = 0.1
 /** How much 10 bread would take off this build now (0: the cap is reached). */
 export function breadCut(b: Build, now: number): number {
   const sped = b.spedMs ?? 0
-  const full = b.endsAt + sped - b.startedAt
+  const full = buildFullMs(b)
   return Math.max(0, Math.min(full * BREAD_SHARE, full * SPEEDUP_MAX_SHARE - sped, b.endsAt - now))
 }
 export function feedBuilders(s: PlotState, b: Build, now: number): number {
@@ -416,5 +418,5 @@ export function giveFirstField(s: PlotState, now: number): boolean {
   return true
 }
 
-/** Grain and bread are bought at the Market but never sold. */
-export const FARM_MATERIALS: readonly Material[] = MATERIALS.filter((m) => MATERIAL_INFO[m].sell === 0)
+/** Grain, bread and copper are bought at the Market but never sold. */
+export const FARM_MATERIALS: readonly Material[] = MATERIALS.filter((m) => MATERIAL_INFO[m].sell === 0 && !LATE_MATERIALS.includes(m))

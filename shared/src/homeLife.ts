@@ -6,7 +6,7 @@
  * coins or XP: only building materials move.
  */
 import { DAY_MS } from './city'
-import { SPEEDUP_MAX_SHARE, type Build, type FieldId, type Materials, type PlotState } from './plot'
+import { SPEEDUP_MAX_SHARE, buildFullMs, type Build, type FieldId, type Materials, type PlotState } from './plot'
 import type { Crop } from './farm'
 
 const day = (now: number) => Math.floor(now / DAY_MS)
@@ -93,7 +93,7 @@ export function helpError(visitor: Pick<PlotState, 'help'>, owner: Pick<PlotStat
 /** Time a helper may still take off this build (within the cap the scrolls and the bread share). */
 export function helpCut(b: Build, now: number): number {
   const sped = b.spedMs ?? 0
-  const full = b.endsAt + sped - b.startedAt
+  const full = buildFullMs(b)
   return Math.max(0, Math.min(HELP.cutMs, full * SPEEDUP_MAX_SHARE - sped, b.endsAt - now))
 }
 

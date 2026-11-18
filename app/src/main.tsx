@@ -157,6 +157,9 @@ if (import.meta.env.DEV && window.location.pathname === '/motion-lab') {
 } else if (import.meta.env.DEV && window.location.pathname === '/looks-lab') {
   // Dev-only contact sheet: every character wearing every head / neck item (looks/bustArt.ts).
   void import('./looks/LooksLab').then(({ LooksLab }) => root.render(<LooksLab />))
+} else if (import.meta.env.DEV && window.location.pathname === '/yard-lab') {
+  // Dev-only: My Home in 3D from made-up levels (?house=N, ?lv=N, ?build=1).
+  void import('./world/YardLab').then(({ YardLab }) => root.render(<YardLab />))
 } else if (import.meta.env.DEV && window.location.pathname === '/exodus-lab') {
   // Dev-only look test for the Exodus runner (docs/exodus.md).
   void import('./exodus/ExodusLab').then(({ ExodusLab }) =>

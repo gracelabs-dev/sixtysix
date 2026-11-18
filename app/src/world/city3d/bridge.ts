@@ -48,7 +48,7 @@ export const EXPOSURE = 0.8
 export const NAME_DIST = 72
 
 /** How tall each house level stands (for its label and tap box). */
-export const HOUSE_TOP = [2.6, 3.2, 3.9, 4, 6.8, 6.8, 7]
+export const HOUSE_TOP = [2.6, 3.2, 3.9, 4, 6.8, 6.8, 7, 7.6, 7.8, 9.4, 9.4, 10]
 
 /** A name tag's anchor in the scene. */
 export interface LabelSpec {

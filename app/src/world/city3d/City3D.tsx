@@ -91,7 +91,7 @@ export default function City3D({ residents, me, onLandmark, onPlace, onResident,
       if (!l) continue
       const [x, z] = lotCentre(l)
       const special = r.username === me || r.username === found?.username
-      out.push({ id: `r:${r.username}`, x, y: heightAt(x, z) + HOUSE_TOP[Math.min(6, Math.max(0, r.house - 1))] * HOUSE_SCALE + 0.8, z, always: special, name: true })
+      out.push({ id: `r:${r.username}`, x, y: heightAt(x, z) + HOUSE_TOP[Math.min(HOUSE_TOP.length - 1, Math.max(0, r.house - 1))] * HOUSE_SCALE + 0.8, z, always: special, name: true })
     }
     for (const n of free.slice(0, FREE_LABELS)) {
       const [x, z] = lotCentre(LOTS[n - 1])

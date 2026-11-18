@@ -10,13 +10,15 @@ import {
   SCROLL_QUESTIONS,
   SPEEDUP_MAX_SHARE,
   SCROLL_COOLDOWN_MS,
+  apprenticeCut,
+  buildFullMs,
+  sell,
   WEEKLY_CEDAR,
   advance,
   buyPrice,
   modsOf,
   plotMods,
   scrollCutMs,
-  sellPrice,
   weekStartUtc,
   checkUpgrade,
   collect,
@@ -86,6 +88,7 @@ import {
   STALL_LIST,
   STALL_MAX,
   stallRange,
+  stallToll,
   stallable,
   type StallLot,
 } from '@sixtysix/shared'
@@ -131,9 +134,14 @@ export function parsePlot(raw: string, now: number): PlotState {
   for (const b of BUILDING_IDS) base.levels[b] = Math.floor(num(p.levels?.[b], base.levels[b]))
   for (const m of MATERIALS) base.inventory[m] = Math.floor(num(p.inventory?.[m]))
   for (const b of BUILDING_IDS) if (p.stock?.[b] !== undefined) base.stock[b] = num(p.stock[b])
-  base.builds = (Array.isArray(p.builds) ? p.builds : []).filter(
-    (x) => BUILDING_IDS.includes(x?.building) && Number.isFinite(x.endsAt) && Number.isFinite(x.toLevel),
-  )
+  base.builds = (Array.isArray(p.builds) ? p.builds : [])
+    .filter((x) => BUILDING_IDS.includes(x?.building) && Number.isFinite(x.endsAt) && Number.isFinite(x.toLevel))
+    .map((x) => ({
+      building: x.building, toLevel: x.toLevel, startedAt: num(x.startedAt), endsAt: x.endsAt,
+      ...(x.spedMs ? { spedMs: num(x.spedMs) } : {}),
+      ...(x.helpMs ? { helpMs: num(x.helpMs) } : {}),
+      ...(x.by === 'apprentice' ? { by: 'apprentice' as const } : {}),
+    }))
   base.updatedAt = num(p.updatedAt, now)
   if (p.boostUntil !== undefined) base.boostUntil = num(p.boostUntil)
   if (p.gifts && typeof p.gifts === 'object') {
@@ -163,6 +171,8 @@ export function parsePlot(raw: string, now: number): PlotState {
       return [team]
     })
   }
+  const sold = obj(p.sold)
+  if (sold) base.sold = { day: Math.floor(num(sold.day)), n: materials(sold.n) }
   base.glean = parseGlean(p.glean)
   base.gleaned = parseGlean(p.gleaned)
   if (p.fieldGift === true) base.fieldGift = true
@@ -398,8 +408,7 @@ export function registerPlotRoutes(app: FastifyInstance): void {
     if (!m || !qty) return fail('Unknown material or amount')
     if (!sellable(m)) return fail('The Market doesn’t buy that')
     if (c.plot.inventory[m] < qty) return fail(`You only have ${c.plot.inventory[m]} ${MATERIAL_INFO[m].name.toLowerCase()}`)
-    c.plot.inventory[m] -= qty
-    c.profile.coins += sellPrice(m, qty, modsOf(c.plot))
+    c.profile.coins += sell(c.plot, m, qty, c.now)
     save(c)
     return view(c)
   })
@@ -444,7 +453,7 @@ export function registerPlotRoutes(app: FastifyInstance): void {
         const seller = db.prepare('SELECT * FROM users WHERE id = ?').get(lot.user_id) as unknown as UserRow | undefined
         if (seller) {
           const profile = toAccount(seller).profile
-          profile.coins += lot.price
+          profile.coins += lot.price - stallToll(lot.price)
           saveProfile(seller.id, profile)
         }
       })
@@ -471,10 +480,25 @@ export function registerPlotRoutes(app: FastifyInstance): void {
     }
     for (const m of MATERIALS) c.plot.inventory[m] -= check.cost[m] ?? 0
     const ms = check.minutes * 60_000 // skills applied (Many hands, Quick hands)
-    c.plot.builds.push({ building: b, toLevel: check.toLevel, startedAt: c.now, endsAt: c.now + ms })
+    c.plot.builds.push({ building: b, toLevel: check.toLevel, startedAt: c.now, endsAt: c.now + ms, ...(check.byApprentice ? { by: 'apprentice' as const } : {}) })
     advance(c.plot, c.now) // a zero-minute level would finish at once
     save(c)
     return view(c, { spent: check.missingCoins + check.price })
+  })
+
+  /** The Apprentice helps a builder: { building } loses APPRENTICE_HELP of its time left. */
+  route(app, 'post', '/api/plot/apprentice', (c, body) => {
+    const b = asBuilding(body.building)
+    const build = c.plot.builds.find((x) => x.building === b)
+    if (!build) return fail('That building is not being built')
+    if (!modsOf(c.plot).apprentice) return fail('You have no apprentice yet')
+    const cut = apprenticeCut(c.plot, build, c.now)
+    if (cut <= 0) return fail('Your apprentice is busy')
+    build.endsAt -= cut
+    build.helpMs = cut
+    advance(c.plot, c.now)
+    save(c)
+    return view(c, { building: build.building, cutMs: cut })
   })
 
   /** Collect one producer (`building`) or all of them. */
@@ -763,7 +787,7 @@ export function registerPlotRoutes(app: FastifyInstance): void {
       if (build) {
         // Never more than SPEEDUP_MAX_SHARE of the build's full time in total.
         const sped = build.spedMs ?? 0
-        const full = build.endsAt + sped - build.startedAt
+        const full = buildFullMs(build)
         const cut = Math.max(0, Math.min(scrollCutMs(modsOf(c.plot)), full * SPEEDUP_MAX_SHARE - sped, build.endsAt - c.now))
         build.endsAt -= cut
         build.spedMs = sped + cut

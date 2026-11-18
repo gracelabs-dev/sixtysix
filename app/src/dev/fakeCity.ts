@@ -63,8 +63,8 @@ export function fakeResidents(count: number): Resident[] {
       // Most played today; a few have weeds (25, 45 days) or are for sale (70).
       idleDays: idle < 0.05 ? 25 : idle < 0.1 ? 45 : idle < 0.15 ? 70 : 0,
       // The first families show every level once, whatever the dice say.
-      house: i < 7 ? i + 1 : house,
-      wall: i < 7 ? i : wall,
+      house: i < 12 ? i + 1 : house,
+      wall: i < 12 ? Math.min(8, i) : wall,
     })
   }
   return out

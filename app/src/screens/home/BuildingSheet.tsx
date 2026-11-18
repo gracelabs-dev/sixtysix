@@ -3,6 +3,7 @@ import {
   MATERIAL_INFO,
   MATERIALS,
   PRODUCERS,
+  apprenticeCut,
   checkUpgrade,
   isField,
   levelDef,
@@ -128,6 +129,8 @@ function Building({ b, plot }: { b: BuildingId; plot: PlotState }) {
       {build ? (
         <div className="hp-building">
           <strong>{t('home.sheet.building', { level: build.toLevel, name: levelName(b, build.toLevel) })}</strong>
+          {build.by === 'apprentice' && <small>{t('home.sheet.apprenticeBuilds')}</small>}
+          {build.helpMs ? <small>{t('home.sheet.apprenticeHelps')}</small> : null}
           <span className="hp-bar big">
             <span style={{ width: `${buildPct(build, now())}%` }} />
           </span>
@@ -136,6 +139,7 @@ function Building({ b, plot }: { b: BuildingId; plot: PlotState }) {
             {t('home.sheet.scroll', { n: modsOf(plot).scrollMin })}
           </button>
           <BreadButton b={b} build={build} now={t0} />
+          <ApprenticeButton plot={plot} b={b} now={t0} />
         </div>
       ) : c.maxed ? (
         <p className="hp-what done">{t('home.sheet.complete')}</p>
@@ -174,7 +178,9 @@ function Building({ b, plot }: { b: BuildingId; plot: PlotState }) {
                   {r.met ? '✓' : '✗'} {reqLabels[i] ?? r.label}
                 </li>
               ))}
-              <li className={c.freeBuilder ? 'ok' : 'short'}>{c.freeBuilder ? t('home.sheet.builderFree') : t('home.sheet.buildersBusy')}</li>
+              <li className={c.freeBuilder ? 'ok' : 'short'}>
+                {c.byApprentice ? t('home.sheet.apprenticeTakes') : c.freeBuilder ? t('home.sheet.builderFree') : t('home.sheet.buildersBusy')}
+              </li>
               <li className="ok">{t('home.sheet.buildTime', { time: c.minutes ? formatMinutes(c.minutes) : t('home.sheet.instant') })}</li>
             </ul>
             <div className="hp-sheet-btns">
@@ -194,5 +200,26 @@ function Building({ b, plot }: { b: BuildingId; plot: PlotState }) {
       )}
       {error && <p className="hp-error">{tServer(error)}</p>}
     </div>
+  )
+}
+
+/** The Apprentice (Builder skill): put him to help on this build, 25 % of the time left comes off. */
+function ApprenticeButton({ plot, b, now }: { plot: PlotState; b: BuildingId; now: number }) {
+  const t = useT()
+  const { helpBuild, say, busy } = usePlotStore()
+  const build = plot.builds.find((x) => x.building === b)
+  if (!build || !modsOf(plot).apprentice || build.by === 'apprentice' || build.helpMs) return null
+  const cut = apprenticeCut(plot, build, now)
+  return (
+    <button
+      className="hp-btn"
+      disabled={busy || cut <= 0}
+      onClick={async () => {
+        const ms = await helpBuild(b)
+        if (ms) say(tNow('home.sheet.apprenticeDone', { time: formatMinutes(ms / 60_000) }))
+      }}
+    >
+      {cut > 0 ? t('home.sheet.apprenticeHelp', { time: formatMinutes(cut / 60_000) }) : t('home.sheet.apprenticeAway')}
+    </button>
   )
 }

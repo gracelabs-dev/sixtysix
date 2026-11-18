@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FIELD_IDS, MATERIAL_INFO, PRODUCERS, levelDef, ready, type BuildingId, type FieldId, type PlotState } from '@sixtysix/shared'
+import { BUILDINGS, FIELD_IDS, MATERIAL_INFO, PRODUCERS, levelDef, ready, type BuildingId, type FieldId, type PlotState } from '@sixtysix/shared'
 
 /** Re-render every `ms` (timers, production). */
 export function useTick(ms = 1000): number {
@@ -22,7 +22,7 @@ export function countdown(ms: number): string {
 
 /** Painted art (app/public/art/plot-*.webp, art-pipeline/prompts.json): a few stages per building, one entry per level. */
 const art = (name: string) => `/art/plot-${name}.webp`
-const BUILDING_ART: Record<BuildingId, string[]> = {
+const BUILDING_ART: Partial<Record<BuildingId, string[]>> = {
   house: ['house-1', 'house-2', 'house-3', 'house-3', 'house-4', 'house-4', 'house-5'].map(art),
   well: ['well-1', 'well-2', 'well-2', 'well-3', 'well-3'].map(art),
   wall: ['wall-1', 'wall-1', 'wall-2', 'wall-2', 'wall-2'].map(art),
@@ -41,10 +41,16 @@ const BUILDING_ART: Record<BuildingId, string[]> = {
 /** The empty courtyard, where the Bakehouse will stand. */
 export const COURTYARD_ART = art('courtyard')
 
-/** The picture for a building at a level; level 0 shows level 1 (the caller dims it). */
+/** The level's icon as a picture, for the buildings that have no painting (from House 7 on). */
+const iconArt = (icon: string) =>
+  `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="54" font-size="72" text-anchor="middle" dominant-baseline="middle">${icon}</text></svg>`)}`
+
+/** The picture for a building at a level; level 0 shows level 1 (the caller dims it). Higher levels keep the top painting. */
 export function artFor(b: BuildingId, level: number): string {
   const stages = BUILDING_ART[b]
-  return stages[Math.min(stages.length, Math.max(1, level)) - 1]
+  const lv = Math.max(1, level)
+  if (!stages) return iconArt(levelDef(b, Math.min(lv, BUILDINGS[b].levels.length))?.icon ?? '🏗️')
+  return stages[Math.min(stages.length, lv) - 1]
 }
 
 /** How far a build has come (0…100 %). */

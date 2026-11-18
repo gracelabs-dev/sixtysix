@@ -352,7 +352,7 @@ export function CityScene({ residents, me, found, labels, bridge, start, still, 
     LOTS.forEach((l, i) => {
       const [x, z] = lotCentre(l)
       const r = byLot.get(i + 1)
-      const h = r ? HOUSE_TOP[Math.min(6, Math.max(0, r.house - 1))] * HOUSE_SCALE + 0.5 : 1.2
+      const h = r ? HOUSE_TOP[Math.min(HOUSE_TOP.length - 1, Math.max(0, r.house - 1))] * HOUSE_SCALE + 0.5 : 1.2
       o.position.set(x, heightAt(x, z) + h / 2, z)
       // Retired lots can't be tapped.
       const w = r || lotOpen(i + 1) ? 2 * LOT_HALF : 0

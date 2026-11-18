@@ -32,7 +32,7 @@ import { earGeometry, FIELD_3D, FIELD_D, FIELD_W, fieldBedGeometry, MAX_EARS, MA
 import { gfxTier, QUALITY } from './quality'
 import { CITY_SKY, setSky, skyDome, type SkyMesh } from './sky'
 import { groundMaterial } from './terrain'
-import { bushGeometry, FENCE_CORNERS, FENCE_PATHS, FIG_UNITS, grassTuftGeometry, NAMES_AT, placeYardGreens, placeYardWeeds, groundAt, groundGeometry, groundTexture, placeYardTrees, PLOT_MIN_DIST, PLOT_START_POLAR, plotMaxDist, plotStartDist, PX, R, SPOT_3D, TOWER, YARD_3D, GROUND, yardPropsGeometry } from './plotSpace'
+import { bushGeometry, FENCE_CORNERS, FENCE_PATHS, FIG_UNITS, grassTuftGeometry, NAMES_AT, placeYardGreens, placeYardWeeds, groundAt, groundGeometry, groundTexture, placeYardTrees, PLOT_BOUNDS, PLOT_MIN_DIST, PLOT_START_POLAR, PLOT_START_Z, plotMaxDist, plotStartDist, PX, R, SPOT_3D, TOWER, YARD_3D, GROUND, yardPropsGeometry } from './plotSpace'
 import { configureRig, useDisposeOnUnmount } from './rig'
 import { weedGeometry } from './houses'
 import { Geo, setInstances } from './geo'
@@ -381,7 +381,7 @@ export const PlotScene3D = memo(function PlotScene3D({ levels, building, labels,
     if (!c) return
     bridge.controls = c
     bridge.invalidate = invalidate
-    configureRig(c, { minDist: PLOT_MIN_DIST, maxDist, minPolar: 0.2, maxPolar: 1.18, boundary: [new Vector3(-30, -1, -19), new Vector3(30, 6, 46)] })
+    configureRig(c, { minDist: PLOT_MIN_DIST, maxDist, minPolar: 0.2, maxPolar: 1.18, boundary: [new Vector3(...PLOT_BOUNDS[0]), new Vector3(...PLOT_BOUNDS[1])] })
     return () => {
       bridge.controls = null
     }
@@ -389,7 +389,7 @@ export const PlotScene3D = memo(function PlotScene3D({ levels, building, labels,
   useEffect(() => {
     const c = controls.current
     if (!c) return
-    const tz = 8
+    const tz = PLOT_START_Z
     c.setLookAt(0, startDist * Math.cos(PLOT_START_POLAR), tz + startDist * Math.sin(PLOT_START_POLAR), 0, 0, tz, false)
     // The start only matters once.
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

@@ -71,7 +71,7 @@ export default {
     haggler: { name: 'Feilscher', effect: { 1: 'Marktpreise −5 %', 2: 'Marktpreise −10 %' } },
     workers: { name: 'Geschickte Arbeiter', effect: { 1: 'Arbeiterrollen sparen 7 Min.', 2: 'Arbeiterrollen sparen 10 Min.' } },
     neighbour: { name: 'Guter Nachbar', effect: { 1: 'Deine Hilfe beim Bau eines Freundes spart 10 Min.' } },
-    third: { name: 'Dritter Bauarbeiter', effect: { 1: 'Ein Bauarbeiter mehr: Bau drei Dinge gleichzeitig (zwei vor dem Hofhaus)' } },
+    third: { name: 'Lehrling', effect: { 1: 'Ein Lehrling: baut alles bis 2 Stunden selbst oder hilft einem Bauarbeiter (25 % der Restzeit weniger)' } },
     quick: { name: 'Flinke Hände', effect: { 1: 'Bauten bis 15 Minuten sind sofort fertig' } },
     master: { name: 'Weiser Baumeister', effect: { 1: 'Einmal pro Woche einen Bau sofort fertigstellen' } },
     harvest: { name: 'Gute Ernte', effect: { 1: 'Erzeuger produzieren +10 %', 2: '+20 %', 3: '+30 %' } },

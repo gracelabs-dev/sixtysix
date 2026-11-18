@@ -101,7 +101,8 @@ export const SKILLS: Record<SkillId, SkillDef> = {
   haggler: S('haggler', 'builder', 1, 'Haggler', '🤝', ['Market prices −5 %', 'Market prices −10 %'], { ref: 'Prov 20:14' }),
   workers: S('workers', 'builder', 2, 'Skilled workers', '📜', ["Workers' scrolls take 7 min off", "Workers' scrolls take 10 min off"], { ref: 'Ex 35:10' }),
   neighbour: S('neighbour', 'builder', 2, 'Good neighbour', '🏘️', ["Your helping hand on a friend's build takes 10 min off"], { ref: 'Luke 10:36', soon: true }),
-  third: S('third', 'builder', 3, 'Third builder', '👷', ['One more builder: build three things at once (two before the courtyard house)'], { ref: 'Ezra 3:8' }),
+  // The id stays 'third' (stored ranks); it was the Third builder (docs/jerusalem-progression.md §9).
+  third: S('third', 'builder', 3, 'Apprentice', '👷', ['An apprentice: builds anything of 2 hours or less on his own, or helps a builder (25 % off the time left)'], { ref: 'Ezra 3:8' }),
   quick: S('quick', 'builder', 4, 'Quick hands', '⚡', ['Builds of 15 minutes or less finish instantly'], { ref: 'Prov 22:29' }),
   master: S('master', 'builder', 5, 'Master builder', '🏛️', ['Once a week, finish any build instantly'], { ref: 'Ex 31:3' }),
 
@@ -192,8 +193,8 @@ export interface PlotMods {
   sellRate: number
   /** Minutes a Workers' scroll takes off (Skilled workers). */
   scrollMin: number
-  /** Extra builders (Third builder). */
-  extraBuilders: number
+  /** The Apprentice: short builds on his own, or help on a long one. */
+  apprentice: boolean
   /** Builds this short (after Many hands) finish at once (Quick hands); 0 = off. */
   instantMin: number
   /** Extra production share (Good harvest). */
@@ -210,7 +211,7 @@ export interface PlotMods {
 }
 
 export const NO_MODS: PlotMods = {
-  buildTime: 0, buyDiscount: 0, sellRate: 0.5, scrollMin: 5, extraBuilders: 0, instantMin: 0,
+  buildTime: 0, buyDiscount: 0, sellRate: 0.5, scrollMin: 5, apprentice: false, instantMin: 0,
   production: 0, storage: 0, water: 0, sevenYears: false, weeklyCedar: false, masterBuilder: false,
 }
 
@@ -221,7 +222,7 @@ export function plotMods(ranks: SkillRanks | undefined): PlotMods {
     buyDiscount: 0.05 * r('haggler'),
     sellRate: 0.5 + 0.1 * r('trader'),
     scrollMin: [5, 7, 10][r('workers')],
-    extraBuilders: r('third'),
+    apprentice: r('third') > 0,
     instantMin: r('quick') ? 15 : 0,
     production: 0.1 * r('harvest'),
     storage: 0.25 * r('barns'),

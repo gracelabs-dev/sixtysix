@@ -1,7 +1,7 @@
 export default {
   title: 'Markt',
   hero: 'Der Markt am Schaftor',
-  heroSub: 'Kauf, was du brauchst. Übriges verkaufst du zum halben Preis.',
+  heroSub: 'Kauf, was du brauchst. Übriges verkaufst du zum halben Preis, je mehr an einem Tag, desto weniger.',
   signUp: '🔒 Erstelle ein kostenloses Konto, um auf dem Markt zu handeln ›',
   madeBy: {
     wood: 'Werkstatt',
@@ -15,8 +15,13 @@ export default {
     wheat: 'Felder · Joh 12,24',
     bread: 'Backhaus · Mt 24,41',
     copper: 'Kupferminen · 5. Mose 8,9',
+    wine: 'Weinberg · Jes 5,1',
+    linen: 'Weberei · Spr 31,13',
+    tools: 'Schmiede · 1. Sam 13,19',
+    honey: 'Bienenhaus · 2. Mose 3,8',
   },
   noSell: 'unverkäuflich',
+  flooded: 'Heute schon viel verkauft: {pct} % des Preises',
   buy: 'Kaufen',
   sell: 'Verkaufen +{n}',
   bought: 'Gekauft: {amount}',
@@ -24,7 +29,7 @@ export default {
   note: 'Münzen gibt es nur für beantwortete Fragen. Mit echtem Geld kann man hier nichts kaufen.',
   stall: {
     title: 'Der Stand der Familien',
-    sub: 'Handle mit anderen Familien: Biete übrige Materialien für Münzen an oder kaufe, was andere anbieten. Der Preis liegt zwischen dem, was der Markt zahlt, und dem, was er verlangt.',
+    sub: 'Handle mit anderen Familien: Biete übrige Materialien für Münzen an oder kaufe, was andere anbieten. Der Preis liegt zwischen dem, was der Markt zahlt, und der Hälfte bis zu dem, was er verlangt; am Tor zahlt der Verkäufer 10 % Zoll.',
     what: 'Material',
     price: 'Preis',
     low: 'mindestens {n}',

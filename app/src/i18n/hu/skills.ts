@@ -71,7 +71,7 @@ export default {
     haggler: { name: 'Alkudozó', effect: { 1: 'Piaci árak −5%', 2: 'Piaci árak −10%' } },
     workers: { name: 'Ügyes munkások', effect: { 1: 'A munkások tekercse 7 percet spórol', 2: 'A munkások tekercse 10 percet spórol' } },
     neighbour: { name: 'Jó szomszéd', effect: { 1: 'Ha besegítesz egy barátod építkezésébe, 10 perccel rövidebb lesz' } },
-    third: { name: 'Harmadik építő', effect: { 1: 'Eggyel több építő: egyszerre három dolgot építhetsz (az udvaros ház előtt kettőt)' } },
+    third: { name: 'Inas', effect: { 1: 'Egy inas: a legfeljebb 2 órás építéseket egyedül elvégzi, vagy segít egy építőnek (a hátralévő idő 25 %-a lejön)' } },
     quick: { name: 'Fürge kezek', effect: { 1: 'A legfeljebb 15 perces építkezések azonnal elkészülnek' } },
     master: { name: 'Építőmester', effect: { 1: 'Hetente egyszer bármelyik építkezést azonnal befejezheted' } },
     harvest: { name: 'Bő termés', effect: { 1: 'A termelők +10%-ot termelnek', 2: '+20%', 3: '+30%' } },

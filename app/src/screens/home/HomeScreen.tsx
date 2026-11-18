@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   FARM_MATERIALS,
+  LATE_MATERIALS,
   IDLE_DAYS,
   MATERIAL_INFO,
   MATERIALS,
@@ -15,6 +16,7 @@ import {
   sheepPlace,
   DAY_MS,
   seasonAt,
+  builderBuilds,
   builderCount,
   idleStage,
   modsOf,
@@ -129,16 +131,19 @@ function Summary({ plot }: { plot: PlotState }) {
   const t = useT()
   const supply = waterSupply(plot.levels, modsOf(plot))
   const used = waterUsed(plot)
-  const builders = builderCount(plot.levels, modsOf(plot))
+  const builders = builderCount(plot.levels)
+  const mods = modsOf(plot)
+  const apprentice = plot.builds.some((b) => b.by === 'apprentice' || b.helpMs)
   return (
     <div className="hp-summary" style={{ backgroundImage: PARCHMENT }}>
       <div className="hp-stats">
         <span title={t('home.summary.waterTitle')}>{rich(t('home.summary.water', { used, supply }))}</span>
-        <span title={t('home.summary.buildersTitle')}>{rich(t('home.summary.builders', { busy: plot.builds.length, count: builders }))}</span>
+        <span title={t('home.summary.buildersTitle')}>{rich(t('home.summary.builders', { busy: builderBuilds(plot).length, count: builders }))}</span>
+        {mods.apprentice && <span title={t('home.summary.apprenticeTitle')}>{rich(t(apprentice ? 'home.summary.apprenticeBusy' : 'home.summary.apprenticeFree'))}</span>}
       </div>
       <div className="hp-inv">
-        {/* Grain, bread and copper once the valley is open (or there is some). */}
-        {MATERIALS.filter((m) => !FARM_MATERIALS.includes(m) || plot.levels.field1 > 0 || plot.inventory[m] > 0).map((m) => (
+        {/* Grain, bread and copper once the valley is open, wine, linen, tools and honey from House 7 (or when there is some). */}
+        {MATERIALS.filter((m) => plot.inventory[m] > 0 || (LATE_MATERIALS.includes(m) ? plot.levels.house >= 7 : !FARM_MATERIALS.includes(m) || plot.levels.field1 > 0)).map((m) => (
           <span key={m} className={`hp-mat ${plot.inventory[m] ? '' : 'none'}`} title={materialName(m)}>
             <i>{MATERIAL_INFO[m].icon}</i>
             {plot.inventory[m]}

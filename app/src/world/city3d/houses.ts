@@ -6,8 +6,8 @@ import { rng } from './space'
 
 /**
  * The families' homes: the same house models as My Home (models.ts: tent →
- * mud-brick → stone house → courtyard house → two storeys → villa → house of
- * cedar), each on a foundation that reaches into the slope. They are drawn
+ * mud-brick → stone house → courtyard house → … → house of cedar → … →
+ * Solomon's house), each on a foundation that reaches into the slope. They are drawn
  * instanced: one draw call per level for the whole city. The front faces +z;
  * the city turns each house a quarter (or not) by lot.
  */
@@ -20,7 +20,7 @@ function foundation(g: Geo, size: number) {
   g.box(0, -3, 0, size + 0.4, 3.0, size + 0.4, C.limeDark, { jitter: 0.03 })
 }
 
-/** One geometry per house level 1…7: the shared house model (models.ts) on its foundation. */
+/** One geometry per house level (1…12, as HOUSE_YARD): the shared house model (models.ts) on its foundation. */
 export function houseGeometries(): BufferGeometry[] {
   const rand = rng(5)
   return HOUSE_YARD.map((size, i) => {

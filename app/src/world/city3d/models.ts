@@ -1,5 +1,5 @@
-import { BufferGeometry, IcosahedronGeometry, Matrix4, PlaneGeometry, type ColorRepresentation } from 'three'
-import { maxLevel, type YardSpot } from '@sixtysix/shared'
+import { BufferGeometry, Color, IcosahedronGeometry, Matrix4, PlaneGeometry, type ColorRepresentation } from 'three'
+import type { YardSpot } from '@sixtysix/shared'
 import { Geo, place, type PartOpts } from './geo'
 import { C } from './palette'
 import { rng } from './space'
@@ -7,8 +7,9 @@ import { rng } from './space'
 /**
  * The homestead's buildings as low-poly models, one per building and level
  * (shared/src/plot.ts), shared by both 3D scenes: My Home (PlotScene3D) draws
- * all nine spots, the city (CityScene) draws each family's house on its lot
- * from the same house models, so a home looks the same in both places.
+ * every yard spot, the city (CityScene) draws each family's house (levels
+ * 1…12) on its lot from the same house models, so a home looks the same in
+ * both places.
  *
  * Every model stands on y = 0 with its front facing +z, in city units (a
  * person is ~2.2 tall). The house models carry their own yard plate; the
@@ -98,8 +99,13 @@ function stoneRing(g: Geo, r: number, h: number, gapAt = 0, gap = 0.5, rand: () 
 // a little off what is behind it, never a hole in the wall.
 
 const PLANE = new PlaneGeometry(1, 1)
+/** Brighter than 1, like the Temple's gold (buildings.ts), so it shines under the tone mapping. */
+const GILT = new Color().setRGB(1.6, 0.92, 0.22)
+/** A forge's embers: glowing orange, brighter than 1. */
+const EMBER = new Color().setRGB(2.4, 0.9, 0.18)
 const STRAW = '#d9c283'
 const PAVING = '#c98f66'
+const PURPLE = '#7a3a8c'
 
 /** A wall facing +z turned by ry: which way is out, and which way runs along it ([out x, out z, along x, along z]). */
 const wallDirs = (ry: number): [number, number, number, number] => [Math.sin(ry), Math.cos(ry), Math.cos(ry), -Math.sin(ry)]
@@ -306,6 +312,22 @@ interface CourtOpts {
   storey?: boolean
   upper?: boolean
   cedar?: boolean
+  /** A guest room on the top roof (house 8). */
+  guest?: boolean
+  /** A gatehouse over the court gate, the elder's bench beside it (9). */
+  gatehouse?: boolean
+  /** The steward's tower on the back rooms (10). */
+  tower?: boolean
+  /** Hewn stone: course lines and cedar beam ends (11). */
+  ashlar?: boolean
+  /** Solomon's house: a garden pool in the court, gold everywhere (12). */
+  garden?: boolean
+}
+
+/** Course lines of hewn stone on a wall facing +z turned by ry: (x, z) its face's middle, w wide, from y0 to y1. */
+function courses(g: Geo, x: number, z: number, w: number, y0: number, y1: number, ry = 0) {
+  const [ox, oz] = wallDirs(ry)
+  for (let y = y0 + 0.62; y < y1 - 0.2; y += 0.62) panel(g, x + ox * 0.03, y, z + oz * 0.03, w, 0.06, '#a8844f', { ry })
 }
 
 /** The courtyard house and every level above it share this plan: rooms at the back and left, a walled court in front. */
@@ -324,7 +346,7 @@ function courtyard(g: Geo, o: CourtOpts) {
   const wd = h - zf
   /** The court's right side: the court wall, or the house of cedar's right wing. */
   const xr = o.cedar ? -xw : h - 0.24
-  const trim = o.cedar ? C.cedar : C.lime
+  const trim = o.garden ? C.gold : o.cedar ? C.cedar : C.lime
   const timber = o.cedar ? C.cedar : C.woodDark
   const sh = { shutters: o.shutter }
   g.box(0, 0.1, bz, s - 0.6, 3.3, backD, o.wall)
@@ -337,7 +359,17 @@ function courtyard(g: Geo, o: CourtOpts) {
   const fr = o.cedar ? xr : h
   g.box((xw + gx - gh) / 2, 0.1, h - 0.12, gx - gh - xw, 1.7, 0.24, o.wall)
   g.box((gx + gh + fr) / 2, 0.1, h - 0.12, fr - gx - gh, 1.7, 0.24, o.wall)
-  g.box(gx, 1.8, h - 0.12, 2 * gh + 0.5, 0.25, 0.3, timber, { jitter: 0 })
+  if (o.gatehouse) {
+    // Two towers and a room over the passage; the elders sit on the bench outside (Ruth 4:1).
+    for (const k of [-1, 1]) g.box(k * (gh + 0.45), 0.1, h - 0.12, 0.9, 3.5, 1.1, o.wall)
+    g.box(0, 2.1, h - 0.12, 2 * gh + 1.8, 1.2, 1.1, o.wall)
+    g.box(0, 3.3, h - 0.12, 2 * gh + 2.0, 0.22, 1.3, trim)
+    for (const x of [-1.35, -0.45, 0.45, 1.35]) g.box(x, 3.52, h + 0.32, 0.45, 0.4, 0.22, trim)
+    win(g, 0, 2.45, h + 0.43, 0, { w: 0.7, h: 0.45, lattice: timber })
+    if (o.garden) panel(g, 0, 3.08, h + 0.45, 2 * gh + 1.9, 0.12, C.gold)
+    g.box(-wx, 0.12, h + 0.2, 2.0, 0.45, 0.36, C.limeLight)
+    awning(g, -wx, 2.55, h, 2.3, 0.75, 0.35, o.b, { stripe: C.cream, n: 3 })
+  } else g.box(gx, 1.8, h - 0.12, 2 * gh + 0.5, 0.25, 0.3, timber, { jitter: 0 })
   const swing = 1.1
   const leaf = (k: 1 | -1, len: number) =>
     g.box(gx - k * gh + (k * Math.cos(swing) * len) / 2, 0.14, h - 0.14 - (Math.sin(swing) * len) / 2, len, 1.5, 0.08, o.cedar ? C.cedar : C.wood, { ry: k * swing, jitter: 0.05 })
@@ -373,9 +405,20 @@ function courtyard(g: Geo, o: CourtOpts) {
   if (o.cedar) wingRoof(-1, true)
   rug(g, wx, 3.8, h, 1.2, o.b, C.cream)
   // The court: a tree, a cistern, a jar, and steps up to the roof.
-  olive(g, o.cedar ? 0.45 : 1.3, o.cedar ? 1.8 : 1.6, o.cedar ? 1.0 : 0.9)
-  g.cyl(-0.4, 0.12, 2.0, 0.5, 0.55, 0.45, C.limeDark, 7)
-  pot(g, o.cedar ? -1.05 : xr - 0.4, 0.12, h - 0.65, 1.3)
+  if (o.garden) {
+    // A pool with a marble rim, cypresses at its corners, flowers.
+    g.box(0, 0.12, 2.25, 2.3, 0.3, 1.7, C.marble, { jitter: 0 })
+    lying(g, 0, 0.44, 2.25, 1.9, 1.3, C.water)
+    for (const k of [-1, 1]) {
+      g.cone(k * 1.05, 0.12, 3.45, 0.38, 2.6, C.cypress, 6)
+      blob(g, k * 1.05, 0.3, 1.0, 0.36, 0.26, 0.36, '#6f9a3c', k)
+      blob(g, k * 1.05, 0.5, 1.0, 0.2, 0.12, 0.2, k > 0 ? '#d65a8a' : C.saffron, k)
+    }
+  } else {
+    olive(g, o.cedar ? 0.45 : 1.3, o.cedar ? 1.8 : 1.6, o.cedar ? 1.0 : 0.9)
+    g.cyl(-0.4, 0.12, 2.0, 0.5, 0.55, 0.45, C.limeDark, 7)
+    pot(g, o.cedar ? -1.05 : xr - 0.4, 0.12, h - 0.65, 1.3)
+  }
   if (!o.cedar) stairs(g, xr - 0.4, 0.1, zf + 3.0, zf, 0.8, 3.3, 5, C.limeDark, true)
   if (!o.upper) {
     // A cloth shade over the door, and washing spread out on the wing's roof.
@@ -405,15 +448,55 @@ function courtyard(g: Geo, o: CourtOpts) {
     win(g, ux - uw / 2, 4.6, bz, -Math.PI / 2)
     rug(g, cu, 6.95, zu, 0.7, o.b, C.cream)
     const tx = (ux + uw / 2 + h) / 2
-    for (const [px, pz] of [[-0.9, -0.8], [0.9, -0.8], [-0.9, 0.8], [0.9, 0.8]]) g.box(tx + px, 3.7, bz + pz, 0.12, 1.7, 0.12, timber, { jitter: 0 })
-    awning(g, tx, 5.45, bz - 1.0, 2.2, 2.0, 0, o.a, { stripe: C.cream, n: 3 })
-    pot(g, tx + 0.7, 3.7, zf - 0.4, 1.1)
-    blob(g, tx + 0.7, 4.5, zf - 0.4, 0.34, 0.32, 0.34, C.green)
-    // On the top roof: a rug, a mat, a jar.
-    rugFlat(g, ux + 0.7, 6.5, bz, 1.6, 1.0, o.cedar ? C.blue : C.green, C.cream, 0.12)
-    matRoll(g, ux - 1.0, 6.5, bz + 0.2, 1.3, 1.2)
-    pot(g, ux - uw / 2 + 0.6, 6.5, bz - 0.5)
+    if (o.tower) {
+      // The steward's tower on the back rooms, keeping watch over the house.
+      const tw = h - (ux + uw / 2) - 0.1
+      g.box(tx, 3.7, bz - 0.1, tw, 4.5, 2.4, o.wall)
+      flatRoof(g, tx, 8.2, bz - 0.1, tw, 2.4, o.roof, trim)
+      for (const x of [tx - tw / 2 + 0.25, tx + tw / 2 - 0.25]) g.box(x, 8.95, bz + 1.15, 0.4, 0.4, 0.2, trim)
+      win(g, tx, 6.4, bz + 1.1, 0, { w: 0.45, h: 0.7, shutters: o.shutter })
+      win(g, h, 6.4, bz - 0.1, Math.PI / 2, { w: 0.45, h: 0.7 })
+      if (o.ashlar) {
+        courses(g, tx, bz + 1.1, tw, 3.7, 8.2)
+        courses(g, h, bz - 0.1, 2.4, 3.7, 8.2, Math.PI / 2)
+      }
+      if (o.garden) {
+        // A gilded dome on the tower.
+        g.cyl(tx, 8.5, bz - 0.1, 0.8, 0.9, 0.4, C.marble, 8)
+        g.cone(tx, 8.9, bz - 0.1, 0.85, 1.1, GILT, 8, { jitter: 0 })
+      } else {
+        g.box(tx, 8.5, bz - 0.1, 0.08, 1.8, 0.08, C.woodDark, { jitter: 0 })
+        g.box(tx + 0.42, 9.6, bz - 0.1, 0.75, 0.6, 0.04, o.a, { jitter: 0.03 })
+      }
+    } else {
+      for (const [px, pz] of [[-0.9, -0.8], [0.9, -0.8], [-0.9, 0.8], [0.9, 0.8]]) g.box(tx + px, 3.7, bz + pz, 0.12, 1.7, 0.12, timber, { jitter: 0 })
+      awning(g, tx, 5.45, bz - 1.0, 2.2, 2.0, 0, o.a, { stripe: C.cream, n: 3 })
+      pot(g, tx + 0.7, 3.7, zf - 0.4, 1.1)
+      blob(g, tx + 0.7, 4.5, zf - 0.4, 0.34, 0.32, 0.34, C.green)
+    }
+    if (o.guest) {
+      // The guest room on the top roof (2 Kings 4:10), its door under a shade.
+      const gz = bz - 0.35
+      const gw = 2.4
+      g.box(ux - 0.6, 6.5, gz, gw, 2.0, 2.0, o.wall)
+      g.box(ux - 0.6, 8.5, gz, gw + 0.3, 0.25, 2.3, o.roof)
+      g.box(ux - 0.6, 8.75, gz + 1.08, gw + 0.3, 0.3, 0.16, trim)
+      houseDoor(g, ux - 0.95, gz + 1.0, { w: 0.7, h: 1.5, frame: timber, leaf: o.cedar ? C.cedar : C.wood, lintel: timber })
+      win(g, ux + 0.1, 7.4, gz + 1.0, 0, { w: 0.45, h: 0.5, lattice: timber })
+      win(g, ux - 0.6 - gw / 2, 7.4, gz, -Math.PI / 2, { w: 0.45, h: 0.5 })
+      awning(g, ux - 0.6, 8.3, gz + 1.0, gw, 1.0, 0.35, o.a, { stripe: C.cream, n: 3 })
+      if (o.ashlar) courses(g, ux - 0.6, gz + 1.0, gw, 6.5, 8.5)
+      if (o.garden) panel(g, ux - 0.6, 8.8, gz + 1.18, gw + 0.3, 0.1, C.gold)
+      pot(g, ux + 1.2, 6.5, bz + 0.9, 1.1)
+      blob(g, ux + 1.2, 7.3, bz + 0.9, 0.34, 0.32, 0.34, C.green)
+    } else {
+      // On the top roof: a rug, a mat, a jar.
+      rugFlat(g, ux + 0.7, 6.5, bz, 1.6, 1.0, o.cedar ? C.blue : C.green, C.cream, 0.12)
+      matRoll(g, ux - 1.0, 6.5, bz + 0.2, 1.3, 1.2)
+      pot(g, ux - uw / 2 + 0.6, 6.5, bz - 0.5)
+    }
     if (o.cedar) g.box(ux, 6.55, zu + 0.1, uw, 0.18, 0.1, C.gold, { jitter: 0 })
+    if (o.ashlar) courses(g, ux, zu, uw, 3.4, 6.2)
   }
   if (o.upper) {
     // The upper room (aliyah) over the wing, with a little colonnade in the court.
@@ -425,6 +508,8 @@ function courtyard(g: Geo, o: CourtOpts) {
     win(g, wx, 4.3, rz + rd / 2, 0, { lattice: timber, sill: o.cedar ? C.gold : C.limeLight })
     for (const z of [wz - 0.8, wz + 0.6]) win(g, -h, 4.4, z, -Math.PI / 2)
     rugFlat(g, wx, 6.0, rz, 1.3, 0.9, o.a, C.cream, Math.PI / 2 + 0.1)
+    if (o.cedar) g.box(wx, 6.05, rz + rd / 2 + 0.1, wingW, 0.18, 0.1, C.gold, { jitter: 0 })
+    if (o.ashlar) courses(g, wx, rz + rd / 2, wingW, 3.4, 5.7)
     const c0 = xw
     const c1 = o.cedar ? xr : xr - 0.9
     for (const x of [c0 + 0.2, c1 - 0.2]) g.cyl(x, 0.12, zf + 0.95, 0.18, 0.2, 3.05, C.marble, 6)
@@ -433,7 +518,6 @@ function courtyard(g: Geo, o: CourtOpts) {
       // A cedar roof on the colonnade, edged with gold.
       g.box((c0 + c1) / 2, 3.33, zf + 0.6, c1 - c0, 0.2, 1.2, C.cedar)
       g.box((c0 + c1) / 2, 3.36, zf + 1.2, c1 - c0, 0.14, 0.08, C.gold, { jitter: 0 })
-      g.box(wx, 6.05, rz + rd / 2 + 0.1, wingW, 0.18, 0.1, C.gold, { jitter: 0 })
     } else awning(g, (c0 + c1) / 2, 3.62, zf, c1 - c0, 1.25, 0.3, C.tile, { stripe: '#cf7a52', n: 6 })
   }
   if (o.cedar) {
@@ -442,11 +526,20 @@ function courtyard(g: Geo, o: CourtOpts) {
     for (const [px, pz] of [[-0.75, 0.1], [0.75, 0.1], [-0.75, 1.7], [0.75, 1.7]]) post(g, -wx + px, 3.4, wz - 1.0 + pz, 1.47, C.cedar)
     rug(g, -wx, 3.8, h, 1.2, C.red, C.gold)
   }
+  if (o.ashlar) {
+    // Both wings in hewn courses, cedar beam ends under their roofs.
+    for (const k of [1, -1]) {
+      courses(g, k * wx, h, wingW, 0.1, 3.1)
+      courses(g, -k * h, wz, wd, 0.1, 3.1, (-k * Math.PI) / 2)
+      for (let i = 0; i < 4; i++) panel(g, k * wx - wingW / 2 + 0.35 + i * ((wingW - 0.7) / 3), 2.75, h + 0.06, 0.2, 0.2, C.cedar)
+    }
+  }
 }
 
-/** Yard size of each house level 1…7 (the city's foundations follow it). */
-export const HOUSE_YARD = [6.2, 6.4, 7, 7.4, 7.6, 8, 8.4]
+/** Yard size of each house level 1…12 (the city's foundations and fence rings follow it; past 8.8 they would leave the lot). */
+export const HOUSE_YARD = [6.2, 6.4, 7, 7.4, 7.6, 8, 8.4, 8.6, 8.8, 8.8, 8.8, 8.8]
 
+const HEWN = '#e6c98f'
 const HOUSE: ((g: Geo) => void)[] = [
   tent,
   mudBrick,
@@ -455,9 +548,14 @@ const HOUSE: ((g: Geo) => void)[] = [
   (g) => courtyard(g, { size: 7.6, wall: C.limeLight, roof: '#dcc59a', a: C.indigo, b: C.madder, shutter: C.wood, storey: true }),
   (g) => courtyard(g, { size: 8, wall: C.plaster, roof: PAVING, a: C.saffron, b: C.indigo, shutter: C.green, storey: true, upper: true }),
   (g) => courtyard(g, { size: 8.4, wall: C.marble, roof: C.cream, a: C.red, b: C.blue, shutter: C.cedar, storey: true, upper: true, cedar: true }),
+  (g) => courtyard(g, { size: 8.6, wall: C.plaster, roof: PAVING, a: C.madder, b: C.saffron, shutter: C.blue, storey: true, upper: true, cedar: true, guest: true }),
+  (g) => courtyard(g, { size: 8.8, wall: C.limeLight, roof: C.roof, a: C.indigo, b: C.red, shutter: C.cedar, storey: true, upper: true, cedar: true, guest: true, gatehouse: true }),
+  (g) => courtyard(g, { size: 8.8, wall: C.plaster, roof: C.cream, a: C.green, b: C.saffron, shutter: C.cedar, storey: true, upper: true, cedar: true, guest: true, gatehouse: true, tower: true }),
+  (g) => courtyard(g, { size: 8.8, wall: HEWN, roof: C.cream, a: C.blue, b: C.madder, shutter: C.cedar, storey: true, upper: true, cedar: true, guest: true, gatehouse: true, tower: true, ashlar: true }),
+  (g) => courtyard(g, { size: 8.8, wall: C.marble, roof: C.cream, a: PURPLE, b: C.blue, shutter: C.cedar, storey: true, upper: true, cedar: true, guest: true, gatehouse: true, tower: true, ashlar: true, garden: true }),
 ]
 
-/** Draws house level 1…7 into g (the city adds its foundation first). */
+/** Draws house level 1…12 into g (the city adds its foundation first). */
 export function drawHouse(g: Geo, level: number) {
   HOUSE[Math.min(HOUSE.length, Math.max(1, level)) - 1](g)
 }
@@ -1036,6 +1134,361 @@ export function threshGeometry(level: number): BufferGeometry {
   })
 }
 
+// ── The vineyard: young vines → a hedge round it → winepress → watchtower → the vineyards of En-gedi ──
+
+const GRAPE = '#6b2d7a'
+const GRAPE_LIGHT = '#8a46a0'
+const WINE = '#7a1f4a'
+
+/** A vine on a stake (s = how grown): a trunk, a crown of leaves, grapes once grown. */
+function vine(g: Geo, x: number, z: number, s: number, grapes: number, k: number) {
+  g.box(x, 0.06, z, 0.07, 0.5 + 0.7 * s, 0.07, C.woodDark, { jitter: 0 })
+  blob(g, x, 0.45 + 0.75 * s, z, 0.25 + 0.3 * s, 0.2 + 0.18 * s, 0.24 + 0.2 * s, k % 2 ? '#6f9a3c' : '#5f8a34', k)
+  for (let i = 0; i < grapes; i++) {
+    const a = k * 1.7 + i * 2.4
+    g.cone(x + Math.sin(a) * 0.32, 0.62 + 0.45 * s, z + 0.24 + Math.cos(a) * 0.08, 0.15, 0.34, i % 2 ? GRAPE_LIGHT : GRAPE, 5, { rx: Math.PI })
+  }
+}
+
+/** A basket (of grapes, wool, honeycomb): a squat open cylinder with a heap on top. */
+function basket(g: Geo, x: number, z: number, fill: string, s = 1) {
+  g.cyl(x, 0.06, z, 0.32 * s, 0.24 * s, 0.32 * s, '#c79a52', 7)
+  blob(g, x, 0.38 * s, z, 0.26 * s, 0.13 * s, 0.26 * s, fill)
+}
+
+/** A rock-cut winepress: the treading floor, a channel, the vat below it full of juice. */
+function winepress(g: Geo, x: number, z: number) {
+  g.box(x, 0.06, z, 1.9, 0.55, 1.6, C.limeDark)
+  lying(g, x, 0.62, z, 1.5, 1.2, WINE)
+  g.box(x + 1.3, 0.06, z + 0.3, 0.8, 0.32, 0.9, C.limeDark)
+  lying(g, x + 1.3, 0.39, z + 0.3, 0.55, 0.65, WINE)
+  g.box(x + 0.95, 0.5, z + 0.3, 0.3, 0.08, 0.16, C.lime, { jitter: 0 })
+  for (const dx of [-0.3, 0.35]) blob(g, x + dx, 0.75, z - 0.2, 0.22, 0.14, 0.2, GRAPE_LIGHT, dx)
+}
+
+function vineyard(g: Geo, level: number, rand: () => number) {
+  g.box(0, 0, 0, 9.6, 0.08, 7.1, '#a87a4a', { jitter: 0.02 })
+  const grown = level >= 2
+  const rows = level === 1 ? 3 : 4
+  const right = level >= 3 ? 1.6 : 4.0
+  // Rows of vines across the front; a winepress and a watchtower take the right side from level 3.
+  for (let r = 0; r < rows; r++) {
+    const z = -2.6 + r * 1.15
+    g.box(-1.4 + right / 2, 0.06, z, 3.6 + right, 0.08, 0.5, '#8a5f36', { jitter: 0.04 })
+    const n = level === 1 ? 5 : 6
+    for (let i = 0; i < n; i++) {
+      const x = -4.2 + i * ((3.6 + right) / (n - 1))
+      vine(g, x + (rand() - 0.5) * 0.1, z, level === 1 ? 0.3 : level >= 4 ? 1 : 0.8, grown ? (level >= 4 ? 3 : 2) : 0, r * 7 + i)
+    }
+    if (grown) g.box(-1.4 + right / 2, 1.0, z, 3.6 + right, 0.03, 0.03, '#e3d3a8', { jitter: 0 })
+  }
+  if (level === 1) {
+    // A hoe, a basket of cuttings, stakes waiting.
+    g.box(2.6, 0.06, 2.4, 0.07, 1.4, 0.07, C.wood, { rz: 1.2, jitter: 0 })
+    basket(g, 3.3, 1.5, '#6f9a3c')
+    for (let i = 0; i < 4; i++) g.box(3.4 + i * 0.12, 0.08, -1.0, 0.07, 1.1, 0.07, C.woodDark, { rz: 1.5, jitter: 0 })
+    return
+  }
+  // A hedge of thorn bushes round three sides (Isaiah 5:2), open at the front.
+  const hx = 4.5
+  const hz = 3.25
+  for (let i = 0; i < 9; i++) blob(g, -hx + 0.45 + i * ((2 * hx - 0.9) / 8), 0.4, -hz, 0.62, 0.55, 0.42, i % 2 ? '#56782f' : '#4d6c35', i)
+  for (const k of [-1, 1]) for (let i = 0; i < 6; i++) blob(g, k * hx, 0.4, -hz + 0.9 + i * 0.95, 0.42, 0.52, 0.6, i % 2 ? '#56782f' : '#4d6c35', i + k)
+  if (level === 2) {
+    basket(g, 2.6, 2.2, GRAPE)
+    basket(g, 3.3, 2.5, GRAPE_LIGHT, 0.8)
+    return
+  }
+  winepress(g, 2.3, 1.5)
+  jar(g, 3.7, 2.6, 1, C.mudDark)
+  jar(g, 3.2, 2.85, 0.85)
+  basket(g, 1.2, 2.7, GRAPE)
+  if (level === 3) return
+  // A round stone watchtower in the corner, a shelter of branches on top.
+  const tx = 3.2
+  const tz = -1.9
+  g.cyl(tx, 0.06, tz, 0.95, 1.1, 3.0, C.limeDark, 9)
+  g.cyl(tx, 3.06, tz, 1.05, 1.0, 0.18, C.lime, 9)
+  g.box(tx, 2.2, tz + 0.98, 0.4, 0.5, 0.05, C.dark, { jitter: 0 })
+  g.box(tx - 0.2, 0.06, tz + 1.02, 0.6, 1.3, 0.05, C.dark, { jitter: 0 })
+  for (const [px, pz] of [[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]]) post(g, tx + px, 3.24, tz + pz, 1.3, C.wood)
+  g.box(tx, 4.5, tz, 1.6, 0.14, 1.6, '#9a8a4a', { jitter: 0.08 })
+  if (level === 4) return
+  // En-gedi: date palms by the spring, a booth for the harvest, baskets full.
+  for (const [px, pz, s] of [[-3.8, 2.3, 1], [-1.1, 3.3, 0.8]] as const) {
+    g.cyl(px, 0.06, pz, 0.12 * s, 0.17 * s, 3.4 * s, C.trunk, 5, { rz: 0.08 })
+    for (let i = 0; i < 6; i++) g.box(px + Math.sin(i * 1.05) * 0.7 * s, 3.3 * s, pz + Math.cos(i * 1.05) * 0.7 * s, 0.32 * s, 0.06, 1.6 * s, '#5f8a34', { ry: i * 1.05, rx: 0.35, jitter: 0.08 })
+  }
+  g.cyl(-2.4, 0.07, 2.65, 0.75, 0.75, 0.05, C.water, 10, { jitter: 0 })
+  g.cyl(-2.4, 0.04, 2.65, 0.9, 0.95, 0.06, C.limeDark, 10)
+  for (const [px, pz] of [[-0.3, 1.9], [0.9, 1.9], [-0.3, 3.0], [0.9, 3.0]]) post(g, px, 0.06, pz, 1.9, C.wood)
+  awning(g, 0.3, 1.95, 1.9, 1.5, 1.2, 0.25, C.saffron, { stripe: C.madder, n: 3 })
+  basket(g, 1.8, 3.0, GRAPE_LIGHT, 0.85)
+  g.box(tx + 0.1, 4.64, tz, 0.06, 1.2, 0.06, C.woodDark, { jitter: 0 })
+  g.box(tx + 0.45, 5.35, tz, 0.65, 0.45, 0.04, GRAPE_LIGHT, { jitter: 0.03 })
+}
+
+// ── The weaver's house: a loom → weaver's shed → Lydia's dye works → embroiderers' house → fine linen and purple ──
+
+/** An upright loom facing +z: two posts, the beam, the warp with a band woven in at the bottom. */
+function loom(g: Geo, x: number, z: number, band: string, ry = 0) {
+  inFrame(g, x, z, ry, 1, () => {
+    for (const lx of [-0.75, 0.75]) g.box(lx, 0.06, 0, 0.12, 2.1, 0.12, C.wood, { jitter: 0 })
+    g.box(0, 2.0, 0, 1.8, 0.14, 0.16, C.woodDark, { jitter: 0 })
+    panel(g, 0, 0.75, 0.02, 1.3, 1.25, C.cream)
+    panel(g, 0, 0.75, 0.04, 1.3, 0.55, band)
+    panel(g, 0, 1.05, 0.06, 1.3, 0.08, C.gold)
+    // Loom weights hanging on the warp.
+    for (let i = 0; i < 5; i++) g.box(-0.52 + i * 0.26, 0.42, 0.04, 0.14, 0.22, 0.14, C.mud, { jitter: 0.1 })
+  })
+}
+
+/** A line between two poles with cloths hanging from it: its middle at (x, z), w long, running along x turned by ry. */
+function clothLine(g: Geo, x: number, z: number, w: number, colours: string[], ry = 0, stripe?: string) {
+  inFrame(g, x, z, ry, 1, () => {
+    for (const k of [-1, 1]) g.box((k * w) / 2, 0.06, 0, 0.1, 2.3, 0.1, C.wood, { jitter: 0 })
+    g.box(0, 2.25, 0, w, 0.03, 0.03, C.cream, { jitter: 0 })
+    const n = colours.length
+    colours.forEach((c, i) => {
+      const cx = -w / 2 + ((i + 0.5) * w) / n
+      const h = 1.0 + ((i * 7) % 3) * 0.2
+      g.box(cx, 2.25 - h, 0, w / n - 0.12, h, 0.04, c, { jitter: 0.04 })
+      if (stripe) for (const k of [-1, 1]) panel(g, cx, 2.25 - h + 0.12, k * 0.03, w / n - 0.12, 0.1, stripe, { ry: k > 0 ? 0 : Math.PI })
+    })
+  })
+}
+
+/** A dye vat: a stone tub of coloured dye. */
+function vat(g: Geo, x: number, z: number, dye: string) {
+  g.cyl(x, 0.06, z, 0.45, 0.5, 0.6, C.limeDark, 8)
+  lying(g, x, 0.68, z, 0.6, 0.6, dye, 0.4)
+}
+
+const ROYAL = '#7a2a8c'
+
+function weaver(g: Geo, level: number) {
+  g.box(0, 0, 0, 5.8, 0.08, 4.8, '#cfae78', { jitter: 0.02 })
+  if (level === 1) {
+    loom(g, -0.6, -0.6, C.madder)
+    basket(g, 0.9, 0.5, '#f4efe4')
+    g.cyl(-1.8, 0.06, 0.6, 0.24, 0.2, 0.42, C.wood, 6)
+    rugFlat(g, 1.2, 0.08, -0.8, 1.2, 0.8, C.indigo, C.cream, 0.3)
+    return
+  }
+  if (level >= 4) {
+    // The embroiderers' house: plastered, flat-roofed, cloth spread on the roof, a striped awning over the loom.
+    g.box(-0.5, 0.06, -1.5, 4.2, 2.6, 1.6, C.plaster)
+    flatRoof(g, -0.5, 2.66, -1.5, 4.2, 1.6, C.roof, C.plaster)
+    lying(g, -1.4, 3.0, -1.5, 1.4, 1.0, level >= 5 ? ROYAL : C.red, 0.1)
+    lying(g, 0.5, 3.0, -1.4, 1.2, 0.9, C.saffron, -0.15)
+    door(g, -1.9, -0.7, 0.8, 1.7)
+    win(g, 0.9, 1.3, -0.7, 0, { shutters: C.blue, sill: C.limeLight })
+    awning(g, 0.0, 2.4, -0.7, 2.4, 1.3, 0.4, level >= 5 ? ROYAL : C.indigo, { stripe: level >= 5 ? C.gold : C.cream, n: 4 })
+    for (const x of [-1.1, 1.1]) post(g, x, 0.06, 0.55, 1.95, C.wood)
+    rug(g, -0.5, 3.4, -0.7, 1.4, C.madder, C.gold)
+    loom(g, 0.0, -0.25, level >= 5 ? ROYAL : C.madder)
+  } else {
+    // A lean-to of mud brick with a straw roof; the loom stands just under its edge.
+    g.box(-0.4, 0.06, -1.9, 3.6, 2.6, 0.3, C.mud)
+    g.box(-2.05, 0.06, -1.3, 0.3, 2.4, 1.2, C.mud)
+    post(g, 1.25, 0.06, -0.55, 2.4, C.wood)
+    g.slope(-0.4, 2.4, -1.25, 3.9, 0.35, 1.5, 0.12, '#c9b06a', { jitter: 0.08 })
+    loom(g, -0.4, -0.75, C.madder)
+  }
+  // A basket of fleece and skeins of dyed wool.
+  basket(g, -2.4, 0.2, '#f4efe4')
+  for (const [x, c] of [[-2.2, C.madder], [-1.85, C.indigo], [-1.5, C.saffron]] as const) g.cyl(x, 0.06, 0.85, 0.15, 0.15, 0.3, c, 6)
+  if (level === 2) return
+  // Lydia's dye works (Acts 16:14): vats of purple, red and blue in front, the cloth drying on a line.
+  vat(g, -0.6, 1.7, ROYAL)
+  vat(g, 0.5, 1.7, C.red)
+  vat(g, 1.6, 1.7, C.indigo)
+  clothLine(g, 2.45, -0.4, 3.4, level >= 5 ? [ROYAL, C.cream, C.red, ROYAL] : [ROYAL, C.red, C.indigo], -Math.PI / 2, level >= 4 ? C.gold : undefined)
+  if (level <= 4) return
+  // Fine linen and purple: bolts of cloth for sale on a table.
+  g.box(-2.0, 0.06, 1.7, 1.5, 0.75, 0.7, C.wood)
+  for (const [x, c] of [[-2.55, ROYAL], [-2.2, C.cream], [-1.85, C.red], [-1.5, ROYAL]] as const) g.cyl(x, 0.65, 1.7, 0.15, 0.15, 0.62, c, 6, { rx: Math.PI / 2 })
+}
+
+// ── The smithy: a forge → with bellows → Bezalel's workshop → Hiram's bronze foundry → swords into ploughshares ──
+
+/** A stone hearth with glowing coals; its fire faces +z. */
+function hearth(g: Geo, x: number, z: number, s = 1) {
+  g.box(x, 0.06, z, 1.3 * s, 0.85, 1.0 * s, C.limeDark)
+  g.box(x, 0.91, z, 0.9 * s, 0.1, 0.7 * s, '#3a2a22', { jitter: 0 })
+  blob(g, x, 0.98, z, 0.38 * s, 0.14, 0.28 * s, EMBER)
+  blob(g, x + 0.15, 1.06, z + 0.05, 0.18 * s, 0.1, 0.15 * s, '#ffd36a')
+}
+
+/** An anvil on a tree stump, a hammer lying on it. */
+function anvil(g: Geo, x: number, z: number, ry = 0) {
+  g.cyl(x, 0.06, z, 0.3, 0.35, 0.55, C.trunk, 7)
+  g.box(x, 0.61, z, 0.6, 0.18, 0.28, '#4a4a52', { ry, jitter: 0 })
+  g.box(x, 0.79, z, 0.75, 0.12, 0.3, '#5a5a64', { ry, jitter: 0 })
+  g.box(x + 0.05, 0.93, z + 0.05, 0.42, 0.06, 0.06, C.woodDark, { ry: ry + 0.5, jitter: 0 })
+}
+
+/** Goatskin bellows: two puffed skins on the ground by the hearth. */
+function bellows(g: Geo, x: number, z: number) {
+  for (const dz of [-0.3, 0.3]) {
+    blob(g, x, 0.3, z + dz, 0.4, 0.26, 0.26, '#9a7550', dz)
+    g.box(x + 0.45, 0.3, z + dz * 0.5, 0.5, 0.08, 0.08, C.woodDark, { ry: -dz, jitter: 0 })
+  }
+}
+
+/** A cast bronze pillar with a lily capital (1 Kings 7:15–22), on a stone base. */
+function pillar(g: Geo, x: number, z: number, h: number) {
+  g.box(x, 0.06, z, 0.8, 0.3, 0.8, C.limeLight)
+  g.cyl(x, 0.36, z, 0.3, 0.34, h, BRONZE_BRIGHT, 8)
+  g.cyl(x, 0.36 + h, z, 0.48, 0.32, 0.5, BRONZE_BRIGHT, 8)
+  blob(g, x, 0.36 + h + 0.6, z, 0.34, 0.22, 0.34, GILT)
+}
+const BRONZE_BRIGHT = new Color().setRGB(0.95, 0.42, 0.12)
+
+function smithy(g: Geo, level: number) {
+  g.box(0, 0, 0, 5.4, 0.08, 4.4, '#a8906c', { jitter: 0.02 })
+  // Soot and charcoal on the ground.
+  lying(g, 0.2, 0.1, 0.4, 2.0, 1.4, '#6a5a4a', 0.3)
+  if (level === 1) {
+    hearth(g, -0.6, -0.6)
+    anvil(g, 0.9, 0.5)
+    g.cone(-1.9, 0.08, 0.9, 0.55, 0.5, '#2f2a28', 7)
+    g.cyl(1.8, 0.06, -0.8, 0.26, 0.22, 0.45, C.wood, 7)
+    g.cyl(1.8, 0.5, -0.8, 0.22, 0.22, 0.02, C.water, 7, { jitter: 0 })
+    return
+  }
+  const stone = level >= 3
+  const wall = stone ? C.lime : C.mud
+  // The back wall with the hearth against it, a roof over the front.
+  g.box(-0.3, 0.06, -1.85, 4.4, stone ? 2.8 : 2.3, 0.4, wall)
+  g.box(-2.3, 0.06, -1.1, 0.4, stone ? 2.6 : 2.1, 1.5, wall)
+  hearth(g, -0.9, -1.1, 1.1)
+  bellows(g, -2.0, 0.0)
+  anvil(g, 0.5, 0.2)
+  if (stone) {
+    for (const x of [1.6]) post(g, x, 0.06, 0.1, 2.25, C.wood)
+    g.slope(-0.3, 2.3, -0.9, 4.4, 0.5, 2.1, 0.14, C.tile)
+    // The chimney over the hearth, with smoke.
+    g.box(-0.9, 2.3, -1.85, 0.7, 1.6, 0.6, wall)
+    blob(g, -0.85, 4.3, -1.8, 0.4, 0.3, 0.4, '#d9d3cc')
+    blob(g, -0.6, 4.85, -1.7, 0.3, 0.24, 0.3, '#e6e1da')
+  } else {
+    post(g, 1.6, 0.06, 0.1, 1.85, C.wood)
+    g.slope(-0.3, 1.85, -0.9, 4.4, 0.45, 2.1, 0.12, '#9a8a4a', { jitter: 0.08 })
+  }
+  // Tools on the back wall: tongs, hammers.
+  for (let i = 0; i < 3; i++) panel(g, 0.6 + i * 0.35, 1.1, -1.63, 0.08, 0.7, '#4a4a52')
+  if (level === 2) {
+    g.cone(1.9, 0.08, 1.4, 0.55, 0.5, '#2f2a28', 7)
+    return
+  }
+  // Bezalel's bench (Exodus 31:2–5): gold work and a small lampstand.
+  g.box(1.7, 0.06, 1.3, 1.4, 0.8, 0.6, C.wood)
+  g.cyl(1.4, 0.86, 1.3, 0.08, 0.14, 0.55, GILT, 6, { jitter: 0 })
+  g.box(1.4, 1.36, 1.3, 0.55, 0.05, 0.05, GILT, { jitter: 0 })
+  for (const dx of [-0.25, 0, 0.25]) g.box(1.4 + dx, 1.36, 1.3, 0.05, 0.22, 0.05, GILT, { jitter: 0 })
+  g.cyl(2.05, 0.86, 1.3, 0.16, 0.12, 0.14, GILT, 6, { jitter: 0 })
+  if (level === 3) return
+  // Hiram's foundry (1 Kings 7:13): a furnace for the bronze, a pillar newly cast, ingots.
+  g.cyl(-2.0, 0.06, 1.4, 0.6, 0.75, 1.5, '#a85a35', 8)
+  g.cyl(-2.0, 1.56, 1.4, 0.32, 0.5, 0.5, '#8a4a2c', 8)
+  g.box(-2.0, 0.3, 2.07, 0.4, 0.35, 0.06, EMBER, { jitter: 0 })
+  pillar(g, 2.15, -0.6, level >= 5 ? 2.6 : 2.3)
+  for (let i = 0; i < 3; i++) g.box(-0.8 + i * 0.25, 0.08 + (i === 1 ? 0.12 : 0), 1.7, 0.22, 0.12, 0.5, '#c27a3a', { jitter: 0.08 })
+  if (level === 4) return
+  // Swords into ploughshares (Isaiah 2:4): a rack of new ploughshares and sickles, a plough.
+  g.box(0.2, 0.06, 1.9, 1.4, 0.12, 0.12, C.woodDark, { jitter: 0 })
+  g.box(0.2, 0.9, 1.9, 1.4, 0.1, 0.1, C.woodDark, { jitter: 0 })
+  for (let i = 0; i < 4; i++) g.box(-0.35 + i * 0.36, 0.2, 1.95, 0.22, 0.65, 0.05, i % 2 ? '#8c8c96' : '#b0b0ba', { jitter: 0 })
+  g.box(1.0, 0.25, 2.05, 1.4, 0.08, 0.08, C.wood, { rz: 0.35, ry: 0.4, jitter: 0 })
+  g.box(0.4, 0.06, 1.8, 0.3, 0.3, 0.1, '#9a9aa4', { ry: 0.4, jitter: 0 })
+  g.box(-0.3, 2.85, -1.85, 0.06, 1.1, 0.06, C.woodDark, { jitter: 0 })
+  g.box(0.05, 3.55, -1.85, 0.6, 0.4, 0.04, C.saffron, { jitter: 0.03 })
+}
+
+// ── The apiary: wild bees in the rock → clay hives → a bee garden → hives among flowers → milk and honey ──
+
+const HONEY = '#f0b32e'
+const BLOOMS = ['#d65a8a', C.saffron, '#c9a3e0', '#f4efe4', C.madder]
+
+/** A patch of flowers: a bush of leaves with blooms on top. */
+function flowerBush(g: Geo, x: number, z: number, k: number, s = 1) {
+  blob(g, x, 0.25 * s, z, 0.38 * s, 0.25 * s, 0.38 * s, k % 2 ? '#6f9a3c' : '#5f8a34', k)
+  for (let i = 0; i < 3; i++) {
+    const a = k + i * 2.1
+    blob(g, x + Math.sin(a) * 0.2 * s, 0.46 * s, z + Math.cos(a) * 0.2 * s, 0.14 * s, 0.08 * s, 0.14 * s, BLOOMS[(k + i) % BLOOMS.length], a)
+  }
+}
+
+/** A clay hive: a cylinder lying along z on (x, y, z), its dark entrance towards +z. */
+function clayHive(g: Geo, x: number, y: number, z: number) {
+  g.cyl(x, y + 0.24 - 0.45, z, 0.24, 0.24, 0.9, '#dc8f58', 8, { rx: Math.PI / 2 })
+  g.cyl(x, y + 0.23, z + 0.455, 0.12, 0.12, 0.02, C.dark, 6, { rx: Math.PI / 2, jitter: 0 })
+}
+
+/** A straw skep: a beehive dome with bands round it. */
+function skep(g: Geo, x: number, z: number) {
+  g.cyl(x, 0.06, z, 0.4, 0.45, 0.35, C.limeDark, 7)
+  g.cyl(x, 0.41, z, 0.38, 0.42, 0.35, STRAW, 8)
+  g.cone(x, 0.76, z, 0.4, 0.45, '#cfb46e', 8)
+  g.box(x, 0.45, z + 0.4, 0.14, 0.1, 0.05, C.dark, { jitter: 0 })
+}
+
+function apiary(g: Geo, level: number, rand: () => number) {
+  g.box(0, 0, 0, 5.8, 0.08, 4.8, '#bfa36e', { jitter: 0.02 })
+  if (level === 1) {
+    // A rock with a cleft where the wild bees keep their comb (Judges 14:8), wild flowers.
+    blob(g, -0.6, 0.6, -0.9, 1.6, 1.1, 1.1, '#cdbb98')
+    blob(g, 0.6, 0.45, -1.2, 1.0, 0.85, 0.9, '#bcaa86', 1)
+    g.box(-0.4, 0.35, 0.12, 0.5, 0.85, 0.1, C.dark, { jitter: 0 })
+    blob(g, -0.4, 0.75, 0.22, 0.24, 0.3, 0.08, HONEY)
+    for (let i = 0; i < 5; i++) flowerBush(g, -2.0 + i * 0.95 + rand() * 0.2, 1.3 + (i % 2) * 0.5, i, 0.8)
+    basket(g, 1.6, 0.7, HONEY, 0.8)
+    return
+  }
+  // Clay hives stacked in a wall of mud, as at Tel Rehov; more rows as it grows.
+  const stacks = level >= 3 ? 2 : 1
+  for (let s = 0; s < stacks; s++) {
+    const x0 = s === 0 ? -1.6 : 0.4
+    const rows = level >= 3 ? 2 : 1
+    g.box(x0 + 0.6, 0.06, -1.95, 1.8, rows * 0.5 + 0.1, 0.6, C.mudDark)
+    for (let r = 0; r < rows; r++) for (let i = 0; i < 3; i++) clayHive(g, x0 + i * 0.6, 0.06 + r * 0.5, -1.5)
+  }
+  // A smoker pot and a honey jar by the hives.
+  jar(g, 2.3, -1.0, 0.9, C.mudDark)
+  blob(g, 2.3, 0.95, -1.0, 0.12, 0.16, 0.12, '#d9d3cc')
+  if (level === 2) {
+    for (let i = 0; i < 4; i++) flowerBush(g, -2.0 + i * 1.2, 1.4, i)
+    return
+  }
+  // The bee garden: beds of flowers in front of the hives, a low wattle fence.
+  const beds = level >= 4 ? 3 : 2
+  for (let b = 0; b < beds; b++) {
+    const z = 0.2 + b * 0.9
+    for (let i = 0; i < 5; i++) flowerBush(g, -2.2 + i * 0.9 + (b % 2) * 0.4, z, i + b * 2, 0.9)
+  }
+  if (level === 3) {
+    rails(g, -2.7, 2.2, 2.7, 2.2, 0.6, 1.2)
+    return
+  }
+  // Straw skeps among the flowers, a shade for the beekeeper.
+  for (const [x, z] of [[2.3, 0.3], [2.4, 1.4]]) skep(g, x, z)
+  for (const [px, pz] of [[1.6, -2.0], [2.8, -2.0]]) post(g, px, 0.06, pz, 1.9, C.wood)
+  awning(g, 2.2, 1.95, -2.1, 1.5, 1.0, 0.2, C.saffron, { stripe: C.cream, n: 2 })
+  if (level === 4) return
+  // Milk and honey (Exodus 3:8): a stall of honey jars, a goat.
+  g.box(-2.2, 0.06, 2.0, 1.4, 0.7, 0.55, C.wood)
+  for (let i = 0; i < 4; i++) g.cyl(-2.7 + i * 0.32, 0.76, 2.0, 0.11, 0.13, 0.26, HONEY, 6, { jitter: 0 })
+  awning(g, -2.2, 1.7, 1.6, 1.6, 0.8, 0.25, C.madder, { stripe: C.cream, n: 3 })
+  for (const x of [-2.9, -1.5]) post(g, x, 0.06, 2.35, 1.4, C.wood)
+  inFrame(g, 0.2, 2.1, 0.3, 0.7, () => {
+    for (const [lx, lz] of [[-0.4, -0.2], [-0.4, 0.2], [0.4, -0.2], [0.4, 0.2]]) g.box(lx, 0, lz, 0.12, 0.55, 0.12, '#4a3d34', { jitter: 0 })
+    g.box(0, 0.55, 0, 1.1, 0.5, 0.5, '#f1ebe0')
+    g.box(0.65, 0.85, 0, 0.35, 0.35, 0.3, '#f1ebe0')
+    for (const z of [-0.08, 0.08]) g.box(0.6, 1.1, z, 0.06, 0.25, 0.06, '#8a7a6a', { rz: 0.4, jitter: 0 })
+  })
+}
+
 // ── Things standing about a yard (placed by plotSpace.ts YARD_PROPS); each is drawn round its own origin ──
 
 export type PropId = 'fire' | 'garden' | 'washing' | 'tree' | 'bench' | 'jars' | 'cart' | 'dovecote' | 'flowers'
@@ -1134,7 +1587,7 @@ export function sheepGeometry(): BufferGeometry {
 
 /** Footprint (w × d) of each building's spot, for the site markers, scaffolds and tap boxes. */
 export const FOOTPRINT: Record<YardSpot, [number, number]> = {
-  house: [8.4, 8.4],
+  house: [9.2, 9.2],
   well: [4.6, 4.6],
   wall: [7.4, 2.4],
   store: [6.2, 5.4],
@@ -1144,6 +1597,10 @@ export const FOOTPRINT: Record<YardSpot, [number, number]> = {
   kiln: [5, 4.4],
   bake: [4.2, 4.2],
   stable: [6, 5],
+  vineyard: [10, 7.5],
+  weaver: [6, 5],
+  smithy: [5.6, 4.6],
+  apiary: [6, 5],
 }
 
 /** An empty spot: surveyor's pegs and a string round the ground. */
@@ -1190,8 +1647,8 @@ function scaffold(g: Geo, w: number, d: number, h: number) {
 
 export type Spot = YardSpot
 
-/** The levels the models are drawn for; higher levels (copper and bread, shared/src/plot.ts) keep the top model. */
-const MODELLED: Partial<Record<YardSpot, number>> = { house: 7, well: 5, wall: 5, store: 5, workshop: 5, fold: 5, grove: 5, kiln: 4 }
+/** The levels the models are drawn for; higher levels (shared/src/plot.ts) keep the top model. */
+const MODELLED: Record<YardSpot, number> = { house: 12, well: 5, wall: 5, store: 5, workshop: 5, fold: 5, grove: 5, kiln: 4, bake: 4, stable: 4, vineyard: 5, weaver: 5, smithy: 5, apiary: 5 }
 
 const cache = new Map<string, BufferGeometry>()
 const make = (key: string, seed: number, f: (g: Geo, rand: () => number) => void): BufferGeometry => {
@@ -1210,7 +1667,7 @@ const make = (key: string, seed: number, f: (g: Geo, rand: () => number) => void
 /** The model of a building at a level (level 0 = the empty site; the Bakehouse's spot is a paved courtyard until it is built). Cached. */
 export function buildingGeometry(spot: Spot, level: number): BufferGeometry {
   if (spot === 'bake' && level < 1) return make('courtyard', 31, courtyardSpot)
-  const lv = Math.min(MODELLED[spot] ?? maxLevel(spot), Math.max(0, level))
+  const lv = Math.min(MODELLED[spot], Math.max(0, level))
   const [w, d] = FOOTPRINT[spot]
   if (lv === 0) return make(`${spot}:0`, 41, (g) => emptySite(g, w, d))
   return make(`${spot}:${lv}`, 50 + lv, (g, rand) => {
@@ -1235,6 +1692,14 @@ export function buildingGeometry(spot: Spot, level: number): BufferGeometry {
         return bakehouse(g, lv)
       case 'stable':
         return stable(g, lv)
+      case 'vineyard':
+        return vineyard(g, lv, rand)
+      case 'weaver':
+        return weaver(g, lv)
+      case 'smithy':
+        return smithy(g, lv)
+      case 'apiary':
+        return apiary(g, lv, rand)
     }
   })
 }
