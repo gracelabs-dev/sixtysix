@@ -393,3 +393,11 @@ img.jr-plot-house{ width: 64px; height: 50px; object-fit: contain; filter: drop-
 .hev-x{ background: none; border: 0; color: inherit; opacity: 0.7; cursor: pointer; font-size: 13px; }
 .hev-repair small{ display: block; opacity: 0.85; }
 @media (prefers-reduced-motion: reduce){ .hev-card.threat{ animation: none; } }
+.hev-city{ justify-self: start; padding: 4px 10px; border-radius: 999px; background: rgb(20 12 6 / 0.55); border: 1px solid rgb(255 224 138 / 0.4); color: #ffe9b8; font: inherit; font-size: 12.5px; cursor: pointer; }
+/* The Temple and the city (screens/home/TempleSheet.tsx). */
+.tpl h4{ margin: 12px 0 4px; }
+.tpl-stage{ display: grid; gap: 4px; margin: 8px 0; }
+.tpl-give{ flex-wrap: wrap; gap: 8px; }
+.tpl-give select{ font: inherit; padding: 4px 6px; border-radius: 8px; max-width: 100%; }
+.tpl-donors{ margin: 0; padding-left: 22px; display: grid; gap: 2px; }
+.tpl-donors li span{ display: inline-block; min-width: 50%; }

@@ -349,10 +349,14 @@ comes, at most one bad event every 3 days.
   builders or the Apprentice), earthquake, drought, locusts and fire.
 - Good events: three visitors (a blessing), a caravan and early rain.
 
+**Release 3 (Phase D, 2026-11-18): the city.**
+- The weekly house tax (from 23 Nov 2026) and the voluntary tithe.
+- The city treasury, which holds feasts and builds an aqueduct for everyone.
+- The Temple, raised by gifts, which gates House 11 and 12. It takes the place
+  of the Temple listed under Phase F.
+
 Not done yet:
-- taxes and the tithe (D);
-- jobs and the governor (E);
-- the Temple (F).
+- jobs and the governor (E).
 - Costs of the *existing* levels 5–7 were left alone; only the new levels
   follow the steeper curve.
 

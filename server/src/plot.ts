@@ -28,6 +28,17 @@ import {
   BUILDING_IDS as ALL_BUILDINGS,
   type EventKind,
   type News,
+  EMPTY_CITY,
+  TITHE_MS,
+  fundProjects,
+  giftValue,
+  giftable,
+  taxDue,
+  templeStage,
+  titheError,
+  titheOf,
+  weekStartUtc as weekOf,
+  type CityState,
   sell,
   WEEKLY_CEDAR,
   advance,
@@ -219,6 +230,10 @@ export function parsePlot(raw: string, now: number): PlotState {
   const car = obj(p.caravan)
   if (car && MATERIALS.includes(car.material as Material) && num(car.until)) base.caravan = { material: car.material as Material, until: num(car.until), left: Math.floor(num(car.left)) }
   if (p.rain === true) base.rain = true
+  if (num(p.taxWeek)) base.taxWeek = num(p.taxWeek)
+  if (num(p.titheWeek)) base.titheWeek = num(p.titheWeek)
+  if (num(p.titheUntil)) base.titheUntil = num(p.titheUntil)
+  if (num(p.templeGiven)) base.templeGiven = Math.floor(num(p.templeGiven))
   const sold = obj(p.sold)
   if (sold) base.sold = { day: Math.floor(num(sold.day)), n: materials(sold.n) }
   base.glean = parseGlean(p.glean)
@@ -262,6 +277,9 @@ function load(req: FastifyRequest): Ctx | undefined {
   const profile = toAccount(row).profile
   // Skill effects (Builder / Steward) for every rule in shared/plot.ts; the app sees them too.
   plot.mods = plotMods(profile.skills?.ranks)
+  // The city's feast and aqueduct (shared/src/civic.ts), and its treasury and Temple for the app.
+  const city = loadCity()
+  plot.city = { treasury: city.treasury, temple: city.temple, feastUntil: city.feastUntil, aqueductUntil: city.aqueductUntil }
   advance(plot, now)
   const ctx = { row, profile, plot, now }
   // The valley opened: homesteads already at House 3 get Field 1 cleared and sown, once.
@@ -274,8 +292,10 @@ function load(req: FastifyRequest): Ctx | undefined {
 }
 
 function savePlot(c: Ctx): void {
-  const { mods: _derived, ...stored } = c.plot // mods are recomputed from the skills on every load
+  // mods are recomputed from the skills on every load, the city's boons read from city_state
+  const { mods: _derived, city: _city, ...stored } = c.plot
   void _derived
+  void _city
   db.prepare('UPDATE plots SET state = ? WHERE user_id = ?').run(JSON.stringify(stored), c.row.id)
 }
 
@@ -300,6 +320,42 @@ const view = (c: Ctx, extra: Record<string, unknown> = {}) => ({
   ...extra,
 })
 const fail = (error: string) => ({ ok: false, error })
+
+// ── The city's shared state (one row; shared/src/civic.ts) ──────────────
+
+function loadCity(): CityState {
+  const row = db.prepare('SELECT state FROM city_state WHERE id = 1').get() as { state: string } | undefined
+  if (!row) return { ...EMPTY_CITY, donors: {} }
+  try {
+    const p = JSON.parse(row.state) as Partial<CityState>
+    const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0)
+    const donors: Record<string, number> = {}
+    for (const [k, v] of Object.entries(p.donors ?? {})) if (n(v)) donors[k.slice(0, 40)] = n(v)
+    return { treasury: n(p.treasury), temple: n(p.temple), feastUntil: n(p.feastUntil), aqueductUntil: n(p.aqueductUntil), donors }
+  } catch {
+    return { ...EMPTY_CITY, donors: {} }
+  }
+}
+function saveCity(city: CityState): void {
+  db.prepare('INSERT INTO city_state (id, state) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET state = excluded.state').run(JSON.stringify(city))
+}
+/** Coins into the treasury (tax, the gate toll); it pays for a feast or an aqueduct once there is enough. */
+function addTreasury(coins: number, now: number): void {
+  const city = loadCity()
+  city.treasury += coins
+  const started = fundProjects(city, now)
+  if (started.length) console.log(`[city] the treasury paid for ${started.join(', ')}`)
+  saveCity(city)
+}
+/** A gift to the Temple (coins' worth): the city's total, the family's own, the givers' list. */
+function giveTemple(c: Ctx, value: number): void {
+  const city = loadCity()
+  city.temple += value
+  city.donors[c.row.username] = (city.donors[c.row.username] ?? 0) + value
+  saveCity(city)
+  c.plot.templeGiven = (c.plot.templeGiven ?? 0) + value
+  if (c.plot.city) c.plot.city.temple = city.temple
+}
 
 type Handler = (c: Ctx, body: Record<string, unknown>) => unknown
 
@@ -432,6 +488,7 @@ export function dropStallOf(userId: number): void {
 export function registerPlotRoutes(app: FastifyInstance): void {
   // Created here, not at module load: this module is part of an import cycle with accounts.ts (`db`).
   db.exec(`
+    CREATE TABLE IF NOT EXISTS city_state (id INTEGER PRIMARY KEY, state TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS stall (
       id INTEGER PRIMARY KEY,
       user_id INTEGER NOT NULL,
@@ -512,6 +569,7 @@ export function registerPlotRoutes(app: FastifyInstance): void {
         if (seller) {
           const profile = toAccount(seller).profile
           profile.coins += lot.price - stallToll(lot.price)
+          addTreasury(stallToll(lot.price), c.now)
           saveProfile(seller.id, profile)
         }
       })
@@ -628,6 +686,59 @@ export function registerPlotRoutes(app: FastifyInstance): void {
     c.plot.caravan.left -= qty
     save(c)
     return view(c)
+  })
+
+  // ── The city (shared/src/civic.ts) ────────────────────────────────────
+
+  /** Pay this week's house tax into the city treasury. */
+  route(app, 'post', '/api/plot/tax', (c) => {
+    const due = taxDue(c.plot, c.now)
+    if (!due) return fail('Your tax is paid for this week')
+    if (c.profile.coins < due) return fail('Not enough coins')
+    atomic(() => {
+      c.profile.coins -= due
+      c.plot.taxWeek = weekOf(c.now)
+      addTreasury(due, c.now)
+      save(c)
+    })
+    return view(c, { paid: due })
+  })
+
+  /** Bring the week's tithe: a tenth of what the homestead makes, to the Temple; a week's blessing. */
+  route(app, 'post', '/api/plot/tithe', (c) => {
+    const why = titheError(c.plot, c.now)
+    if (why === 'done') return fail('You have brought your tithe this week')
+    if (why === 'little') return fail('There is too little to tithe')
+    const gift = titheOf(c.plot)
+    atomic(() => {
+      for (const m of MATERIALS) c.plot.inventory[m] -= gift[m] ?? 0
+      c.plot.titheWeek = weekOf(c.now)
+      c.plot.titheUntil = c.now + TITHE_MS
+      giveTemple(c, giftValue(gift))
+      savePlot(c)
+    })
+    return view(c, { gift })
+  })
+
+  /** A gift to the Temple: { material, qty }. */
+  route(app, 'post', '/api/plot/temple', (c, body) => {
+    const m = asMaterial(body.material)
+    const qty = asQty(body.qty)
+    if (!m || !qty || !giftable(m)) return fail('Unknown material or amount')
+    if (c.plot.inventory[m] < qty) return fail('Not enough materials')
+    atomic(() => {
+      c.plot.inventory[m] -= qty
+      giveTemple(c, giftValue({ [m]: qty }))
+      savePlot(c)
+    })
+    return view(c)
+  })
+
+  /** The city's treasury, its feast and aqueduct, the Temple and its givers (anyone may look). */
+  app.get('/api/city/state', () => {
+    const city = loadCity()
+    const donors = Object.entries(city.donors).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, given]) => ({ name, given }))
+    return { ok: true, treasury: city.treasury, temple: city.temple, stage: templeStage(city.temple), feastUntil: city.feastUntil, aqueductUntil: city.aqueductUntil, donors }
   })
 
   /** Collect one producer (`building`) or all of them. */

@@ -22,7 +22,7 @@ import {
   modsOf,
   ready,
   suggestNext,
-  waterSupply,
+  waterOf,
   waterUsed,
   type BuildingId,
   type Material,
@@ -44,6 +44,7 @@ import { PlotView } from '../../world/PlotView'
 import { ExpeditionsView, RoadSheet } from './ExpeditionsView'
 import { ChallengeSheet } from './LifeSheets'
 import { EventsPanel } from './Events'
+import { TempleSheet } from './TempleSheet'
 import { SHEEP_PLACES } from '../../world/sheepPlaces'
 import { useIntro } from '../../tutorial/useIntro'
 
@@ -52,7 +53,7 @@ export function HomeScreen() {
   const lastTab = useGameStore((s) => s.lastTab)
   const goTo = useGameStore((s) => s.goTo)
   const account = useAccountStore((s) => s.account)
-  const { plot: raw, loading, error, load, select, selected, scroll, road, challenge, seen, openMarket, view } = usePlotStore()
+  const { plot: raw, loading, error, load, select, selected, scroll, road, challenge, seen, openMarket, view, templeOpen } = usePlotStore()
   const t = useT()
   useTick(1000)
   const plot = usePlotStore.getState().projected()
@@ -122,6 +123,7 @@ export function HomeScreen() {
       )}
       <AnimatePresence>{selected && plot && <BuildingSheet key="sheet" spot={selected} plot={plot} onClose={() => select(null)} />}</AnimatePresence>
       <AnimatePresence>{scroll && <ScrollSheet key="scroll" />}</AnimatePresence>
+      <AnimatePresence>{templeOpen && plot && <TempleSheet key="temple" plot={plot} />}</AnimatePresence>
       <AnimatePresence>{road && <RoadSheet key="road" />}</AnimatePresence>
       <AnimatePresence>{challenge && <ChallengeSheet key="challenge" />}</AnimatePresence>
       <Toast />
@@ -131,7 +133,7 @@ export function HomeScreen() {
 
 function Summary({ plot }: { plot: PlotState }) {
   const t = useT()
-  const supply = waterSupply(plot.levels, modsOf(plot))
+  const supply = waterOf(plot)
   const used = waterUsed(plot)
   const builders = builderCount(plot.levels)
   const mods = modsOf(plot)

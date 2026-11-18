@@ -170,6 +170,13 @@ interface PlotStore {
   repair: (b: BuildingId, buyMissing: boolean) => Promise<boolean>
   welcomeVisitors: (buyMissing: boolean) => Promise<boolean>
   buyCaravan: (qty: number) => Promise<boolean>
+  /** The city (shared/src/civic.ts): pay the house tax, bring the tithe, give to the Temple. */
+  payTax: () => Promise<boolean>
+  bringTithe: () => Promise<Materials | null>
+  giveTemple: (material: Material, qty: number) => Promise<boolean>
+  /** The Temple sheet: open or not. */
+  templeOpen: boolean
+  setTempleOpen: (open: boolean) => void
   answerChallenge: (answers: number[]) => Promise<boolean>
   closeChallenge: () => void
   /** The lost sheep, found. */
@@ -388,6 +395,25 @@ export const usePlotStore = create<PlotStore>((set, get) => {
       set({ busy: true })
       return !!take(await call('/visitors', { buyMissing }))
     },
+
+    payTax: async () => {
+      set({ busy: true })
+      return !!take(await call('/tax', {}))
+    },
+
+    bringTithe: async () => {
+      set({ busy: true })
+      const res = take(await call<{ gift: Materials }>('/tithe', {}))
+      return res ? res.gift : null
+    },
+
+    giveTemple: async (material, qty) => {
+      set({ busy: true })
+      return !!take(await call('/temple', { material, qty }))
+    },
+
+    templeOpen: false,
+    setTempleOpen: (open) => set({ templeOpen: open }),
 
     buyCaravan: async (qty) => {
       set({ busy: true })

@@ -1,8 +1,7 @@
 import {
   BUILDINGS,
   MATERIALS,
-  modsOf,
-  waterSupply,
+  waterOf,
   waterUsed,
   type BuildingId,
   type Material,
@@ -52,8 +51,11 @@ export function formatMinutes(min: number): string {
 export function requirementLabels(plot: PlotState, c: UpgradeCheck): string[] {
   const labels = Object.entries(c.def?.needs ?? {}).map(([r, lvl]) => t('home.sheet.reqBuilding', { name: buildingName(r as BuildingId), level: lvl }))
   if (c.waterNeeded > 0) {
-    const free = waterSupply(plot.levels, modsOf(plot)) - waterUsed(plot)
+    const free = waterOf(plot) - waterUsed(plot)
     labels.push(t('home.sheet.reqWater', { n: c.waterNeeded, free: Math.max(0, free) }))
   }
+  // Same order as checkUpgrade: the Temple gifts, then the house tax.
+  if (c.temple) labels.push(t('home.civic.reqTemple', { n: c.temple, have: plot.templeGiven ?? 0 }))
+  if (c.tax) labels.push(t('home.civic.reqTax', { n: c.tax }))
   return labels
 }

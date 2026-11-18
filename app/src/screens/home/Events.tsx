@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CARAVAN, MATERIAL_INFO, VISITORS_BREAD, caravanLeft, caravanPrice, type News, type PlotState } from '@sixtysix/shared'
+import { CARAVAN, MATERIAL_INFO, TEMPLE_STAGES, VISITORS_BREAD, caravanLeft, caravanPrice, taxDue, templeStage, titheError, titheOf, type News, type PlotState } from '@sixtysix/shared'
 import { usePlotStore } from '../../plot/plotStore'
 import { useGameStore } from '../../game/store'
 import { PaintedCoin } from '../../art/PaintedPortrait'
@@ -41,16 +41,23 @@ export function EventsPanel({ plot, now }: { plot: PlotState; now: number }) {
   const threat = plot.threat && plot.threat.until > now ? plot.threat : undefined
   const visitors = plot.visitors && plot.visitors > now
   const caravan = caravanLeft(plot, now) > 0
+  const tax = taxDue(plot, now)
+  const tithe = !titheError(plot, now)
+  const city = plot.city
   const chips = [
+    city && city.feastUntil > now ? t('home.civic.feastChip', { time: countdown(city.feastUntil - now) }) : '',
+    city && city.aqueductUntil > now ? t('home.civic.aqueductChip', { time: countdown(city.aqueductUntil - now) }) : '',
+    plot.titheUntil && plot.titheUntil > now ? t('home.civic.titheChip', { time: countdown(plot.titheUntil - now) }) : '',
     plot.drought && plot.drought > now ? t('home.events.droughtChip', { time: countdown(plot.drought - now) }) : '',
     plot.blessUntil && plot.blessUntil > now ? t('home.events.blessChip', { time: countdown(plot.blessUntil - now) }) : '',
     plot.rain ? t('home.events.rainChip') : '',
     Object.keys(plot.damage ?? {}).length ? t('home.events.damageChip', { list: Object.keys(plot.damage ?? {}).map((b) => buildingName(b as never)).join(', ') }) : '',
   ].filter(Boolean)
-  if (!threat && !visitors && !caravan && !chips.length && !news.length) return null
   return (
     <div className="hev">
       {threat && <Threat until={threat.until} now={now} />}
+      {tax > 0 && <Tax due={tax} />}
+      {tithe && <Tithe plot={plot} />}
       {visitors && <Visitors />}
       {caravan && <Caravan plot={plot} now={now} />}
       {chips.length > 0 && (
@@ -60,6 +67,7 @@ export function EventsPanel({ plot, now }: { plot: PlotState; now: number }) {
           ))}
         </div>
       )}
+      {city && <CityLine plot={plot} />}
       {news.map((n) => (
         <div key={n.id} className={`hev-news ${n.kind}`}>
           <span>{newsText(n)}</span>
@@ -165,5 +173,68 @@ function Caravan({ plot, now }: { plot: PlotState; now: number }) {
         ×{qty} <PaintedCoin size={14} /> {price}
       </button>
     </div>
+  )
+}
+
+/** The tax collector comes on Monday (Luke 19:2): this week's house tax, into the city treasury. */
+function Tax({ due }: { due: number }) {
+  const t = useT()
+  const { payTax, busy, say } = usePlotStore()
+  const coins = useGameStore((s) => s.player.coins)
+  return (
+    <div className="hev-card">
+      <span>
+        <strong>{t('home.civic.taxCard')}</strong>
+        <small>{t('home.civic.taxSub')}</small>
+      </span>
+      <button
+        className="hp-btn gold"
+        disabled={busy || coins < due}
+        onClick={async () => {
+          if (await payTax()) say(tNow('home.civic.taxPaid', { n: due }))
+        }}
+      >
+        <PaintedCoin size={14} /> {due}
+      </button>
+    </div>
+  )
+}
+
+/** The week's tithe: a tenth of the homestead's goods to the Temple, a week's blessing. */
+function Tithe({ plot }: { plot: PlotState }) {
+  const t = useT()
+  const { bringTithe, busy, say } = usePlotStore()
+  return (
+    <div className="hev-card">
+      <span>
+        <strong>{t('home.civic.titheCard')}</strong>
+        <small>{t('home.civic.titheSub', { list: listMaterials(titheOf(plot)) })}</small>
+      </span>
+      <button
+        className="hp-btn gold"
+        disabled={busy}
+        onClick={async () => {
+          const gift = await bringTithe()
+          if (gift) {
+            say(tNow('home.civic.titheDone'))
+            fireConfetti({ y: 0.4, count: 50 })
+          }
+        }}
+      >
+        {t('home.civic.titheGo')}
+      </button>
+    </div>
+  )
+}
+
+/** The city in one line: its treasury and the Temple's stage; opens the Temple sheet. */
+function CityLine({ plot }: { plot: PlotState }) {
+  const t = useT()
+  const setTempleOpen = usePlotStore((s) => s.setTempleOpen)
+  const c = plot.city!
+  return (
+    <button className="hev-city" onClick={() => setTempleOpen(true)}>
+      {t('home.civic.cityLine', { treasury: c.treasury, stage: templeStage(c.temple), stages: TEMPLE_STAGES.length })} ›
+    </button>
   )
 }
